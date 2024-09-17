@@ -2,11 +2,10 @@ const AWS = require('aws-sdk');
 const { PassThrough } = require('stream');
 
 const bucketName = process.env.s3BucketName;
-const s3Region = process.env.s3Region;
 
 // Configure AWS SDK
 const s3 = new AWS.S3({
-  region: s3Region,
+  region: process.env.s3Region,
   credentials: new AWS.Credentials({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY

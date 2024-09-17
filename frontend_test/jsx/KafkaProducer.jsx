@@ -24,11 +24,25 @@ function KafkaProducer() {
     };
   }, []);
 
+  // Load message from localStorage when component mounts
+  useEffect(() => {
+    const savedMessage = localStorage.getItem('message');
+    if (savedMessage) {
+      setMessage(savedMessage);
+    }
+  }, []);
+
+  // Save message to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('message', message);
+  }, [message]);
+
   // Function to send messages to the backend
   const sendMessage = async () => {
     try {
       await axios.post(`${backendUrl}/send`, { message });
       setMessage(''); // Clear input field after sending
+      localStorage.removeItem('message'); // Optionally remove from localStorage after sending
     } catch (error) {
       console.error('Error sending message:', error);
     }

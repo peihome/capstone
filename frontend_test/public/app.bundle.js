@@ -1,5 +1,4 @@
 /******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
 /***/ "./jsx/App.jsx":
@@ -8,6 +7,7 @@
   \*********************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -20,7 +20,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_KafkaProducer_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], null));
+react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], null));
 
 /***/ }),
 
@@ -30,6 +30,7 @@ react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById
   \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -109,6 +110,7 @@ function FileUploadForm() {
   \********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   uploadFileInChunks: () => (/* binding */ uploadFileInChunks)
@@ -263,6 +265,7 @@ function _uploadChunk() {
   \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
@@ -313,6 +316,19 @@ function KafkaProducer() {
     };
   }, []);
 
+  // Load message from localStorage when component mounts
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    var savedMessage = localStorage.getItem('message');
+    if (savedMessage) {
+      setMessage(savedMessage);
+    }
+  }, []);
+
+  // Save message to localStorage whenever it changes
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    localStorage.setItem('message', message);
+  }, [message]);
+
   // Function to send messages to the backend
   var sendMessage = /*#__PURE__*/function () {
     var _ref = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
@@ -326,17 +342,18 @@ function KafkaProducer() {
             });
           case 3:
             setMessage(''); // Clear input field after sending
-            _context.next = 9;
+            localStorage.removeItem('message'); // Optionally remove from localStorage after sending
+            _context.next = 10;
             break;
-          case 6:
-            _context.prev = 6;
+          case 7:
+            _context.prev = 7;
             _context.t0 = _context["catch"](0);
             console.error('Error sending message:', _context.t0);
-          case 9:
+          case 10:
           case "end":
             return _context.stop();
         }
-      }, _callee, null, [[0, 6]]);
+      }, _callee, null, [[0, 7]]);
     }));
     return function sendMessage() {
       return _ref.apply(this, arguments);
@@ -369,14 +386,14 @@ function KafkaProducer() {
   \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_player__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-player */ "./node_modules/react-player/lib/index.js");
-/* harmony import */ var react_player__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_player__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var video_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! video.js */ "./node_modules/video.js/dist/video.es.js");
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -394,8 +411,36 @@ var S3VideoPlayer = function S3VideoPlayer() {
     _useState4 = _slicedToArray(_useState3, 2),
     errorMessage = _useState4[0],
     setErrorMessage = _useState4[1];
-
-  // Handle form submission to set the custom video URL
+  var videoRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  var playerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    if (videoUrl) {
+      if (videoRef.current) {
+        var player = (0,video_js__WEBPACK_IMPORTED_MODULE_1__["default"])(videoRef.current, {
+          controls: true,
+          autoplay: true,
+          // Auto start video
+          sources: [{
+            src: videoUrl,
+            type: 'application/x-mpegURL'
+          }],
+          fluid: true,
+          // Make the player fluid
+          techOrder: ['html5'] // Ensure HTML5 tech order
+        });
+        playerRef.current = player;
+        player.on('error', function (event) {
+          console.error('Video.js error:', event);
+          setErrorMessage('Error attempting to play the video.');
+        });
+        return function () {
+          if (playerRef.current) {
+            playerRef.current.dispose();
+          }
+        };
+      }
+    }
+  }, [videoUrl]);
   var handleSubmit = function handleSubmit(event) {
     event.preventDefault();
     if (!videoUrl || videoUrl.trim() === '') {
@@ -403,11 +448,6 @@ var S3VideoPlayer = function S3VideoPlayer() {
       return;
     }
     setErrorMessage('');
-  };
-
-  // Check if the file is HLS (m3u8 format)
-  var isHLS = function isHLS(url) {
-    return url.endsWith('.m3u8');
   };
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
     onSubmit: handleSubmit
@@ -424,22 +464,25 @@ var S3VideoPlayer = function S3VideoPlayer() {
     style: {
       color: 'red'
     }
-  }, errorMessage), videoUrl && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react_player__WEBPACK_IMPORTED_MODULE_1___default()), {
-    url: videoUrl,
-    controls: true // Show player controls
-    ,
-    width: "640px",
-    height: "360px",
-    playing: false // Video won't autoplay
-    ,
-    config: {
-      file: {
-        forceHLS: isHLS(videoUrl) // Force HLS if the file is m3u8
-      }
-    }
-  }));
+  }, errorMessage), videoUrl && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("video", {
+    ref: videoRef,
+    className: "video-js vjs-default-skin",
+    width: "640",
+    height: "360",
+    controls: true
+  })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (S3VideoPlayer);
+
+/***/ }),
+
+/***/ "?34aa":
+/*!******************************!*\
+  !*** min-document (ignored) ***!
+  \******************************/
+/***/ (() => {
+
+/* (ignored) */
 
 /***/ })
 
@@ -463,7 +506,7 @@ var S3VideoPlayer = function S3VideoPlayer() {
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
@@ -520,36 +563,6 @@ var S3VideoPlayer = function S3VideoPlayer() {
 /******/ 		};
 /******/ 	})();
 /******/ 	
-/******/ 	/* webpack/runtime/create fake namespace object */
-/******/ 	(() => {
-/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
-/******/ 		var leafPrototypes;
-/******/ 		// create a fake namespace object
-/******/ 		// mode & 1: value is a module id, require it
-/******/ 		// mode & 2: merge all properties of value into the ns
-/******/ 		// mode & 4: return value when already ns object
-/******/ 		// mode & 16: return value when it's Promise-like
-/******/ 		// mode & 8|1: behave like require
-/******/ 		__webpack_require__.t = function(value, mode) {
-/******/ 			if(mode & 1) value = this(value);
-/******/ 			if(mode & 8) return value;
-/******/ 			if(typeof value === 'object' && value) {
-/******/ 				if((mode & 4) && value.__esModule) return value;
-/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
-/******/ 			}
-/******/ 			var ns = Object.create(null);
-/******/ 			__webpack_require__.r(ns);
-/******/ 			var def = {};
-/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
-/******/ 			for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
-/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
-/******/ 			}
-/******/ 			def['default'] = () => (value);
-/******/ 			__webpack_require__.d(ns, def);
-/******/ 			return ns;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -560,14 +573,6 @@ var S3VideoPlayer = function S3VideoPlayer() {
 /******/ 				}
 /******/ 			}
 /******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/ensure chunk */
-/******/ 	(() => {
-/******/ 		// The chunk loading function for additional chunks
-/******/ 		// Since all referenced chunks are already included
-/******/ 		// in this file, this function is empty here.
-/******/ 		__webpack_require__.e = () => (Promise.resolve());
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/global */

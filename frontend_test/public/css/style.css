@@ -1,204 +1,54 @@
-html, main, body, #contents {
-    height: 100%;
-}
-
-body > div {
-    display: grid;
-    grid-template-columns: 0.3fr 1fr;
-    grid-template-rows: 1fr;
-}
-
-header {
-    background-color: #212429;
-    text-align: center;
-}
-
-.dN {
-    display: none;
-}
-
-.tAC {
-    text-align: center;
-}
-
-header h1{
-    color: #FEFBFA;
-    margin-top: 1em;
-    margin-bottom: 1.2em;
-}
-
-header ul {
-    padding-left: 0;
-}
-
-header a {
-    color: #C9CACF;
-    text-decoration: none !important;
-    height: 3em;
-    align-content: center;
-
-    display: block;
-    width: 100%;
-}
-
-header a:hover {
-    background-color: grey;
-    color: white;
-}
-
-header li{
-    list-style-type: none;
-}
-
-main h1 {
-    text-align: center;
-    margin-top: 1em;
-    margin-bottom: 1em;
-}
-
-.insertFormButtons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2em;
-}
-
-.btn-block+.btn-block {
-    margin-top: 0;
-}
-
-.editAndDeleteIconsClass {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1em;
-}
-
-.bi-trash {
-    color: red;
-}
-
-.thead-dark th {
-    background-color: #212429;
-    color: white;
-}
-
-main > div {
-    padding: 2em;
-}
-
-main > form {
-    padding-left: 15em;
-    padding-right: 15em;
-    padding-top: 2em;
-    padding-bottom: 5em;
-}
-
-.form-control.is-valid , .form-control.is-invalid  {
-    background-position: center right calc(.375em + 1.1875rem) !important;
-}
-
-.alert {
-    position: fixed;
-    top: 5%;
-    right: 1%;
-    visibility: unset;
-}
-
-nav a {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 1em;
-    text-align: center;
-    justify-content: center;
-}
-
-nav {
-    display: grid;
-    align-items: center;
-    flex-direction: column;
-}
-
-.required:after {
-    content: " *";
-    color: red;
-    font-weight: 500;
-}
-
-.modal-header i {
-    cursor: pointer;
-    font-size: 23px;
-}
-
-.filters {
-    padding-bottom: 1em;
-    display: flex;
-    gap: 1em;
-    float: inline-end;
-}
-
-.filters select {
-    border: 2px solid;
-    width: 12em;
-    height: 2em;
-}
-
-.table-container {
-    max-height: 500px;
-    overflow-y: scroll;
-    padding: 0;
-    margin-left: 2em;
-    margin-right: 2em;
-    width: calc(100% - 4em);
-    box-shadow: 0 30px 40px rgba(0,0,0,.1);
-}
-
-table {
-    border-collapse: collapse;
-}
-
-table thead th {
-    position: sticky;
-    top: 0px;
-    z-index: 1;
-}
-
-.rowCount {
-    float: right;
-    padding-right: 3em;
-    padding-top: 0.5em;
-}
-
-.report {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 4em;
-}
-
-.report h2 {
-    text-align: center;
-}
-
-.tabs {
-	display: flex;
-    padding-bottom: 0;
-}
-
-.tab-button {
-	padding: 0.5rem 1rem;
-	margin-right: 0.5rem;
-	border: 1px solid #ccc;
-	background: #f9f9f9;
-	cursor: pointer;
-}
-
-.tab-button.active {
-	background: #007bff;
-	color: white;
-	border-color: #007bff;
-}
-
-.tab-button:hover {
-	background: #e9ecef;
-}
+/* youtube-skin.css */
+.video-js {
+    width: 640px;
+    height: 360px;
+    font-family: Arial, sans-serif;
+    position: relative; /* Enable absolute positioning of the play button */
+  }
+  
+  .video-js .vjs-control-bar {
+    background: rgba(0, 0, 0, 0.7); /* Dark background for controls */
+  }
+  
+  .video-js .vjs-play-control,
+  .video-js .vjs-mute-control,
+  .video-js .vjs-volume-control {
+    color: #fff; /* White icons */
+  }
+  
+  .video-js .vjs-progress-holder {
+    background: rgba(0, 0, 0, 0.5); /* Dark progress bar background */
+  }
+  
+  .video-js .vjs-seek-handle {
+    background: #ff0000; /* Red seek handle */
+  }
+  
+  .video-js .vjs-play-progress {
+    background: #ff0000; /* Red progress bar */
+  }
+  
+  .video-js .vjs-current-time,
+  .video-js .vjs-duration {
+    color: #fff; /* White time text */
+  }
+  
+  .video-js .vjs-big-play-button {
+    background: rgba(0, 0, 0, 0.5); /* Dark background for play button */
+    border: 2px solid #fff; /* White border for play button */
+    border-radius: 50%;
+    color: #fff; /* White play icon */
+    font-size: 3rem; /* Adjust size as needed */
+    width: 60px; /* Size of the play button */
+    height: 60px; /* Size of the play button */
+    line-height: 60px; /* Centering play icon vertically */
+    text-align: center; /* Centering play icon horizontally */
+    position: absolute; /* Absolute positioning for centering */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust for exact center */
+  }
+  
+  .video-js .vjs-big-play-button .vjs-icon-play {
+    font-size: 2rem; /* Size of the play icon */
+  }  

@@ -1,11 +1,39 @@
-import React, { useState } from 'react';
-import ReactPlayer from 'react-player';
+import React, { useState, useRef, useEffect } from 'react';
+import videojs from 'video.js';
 
 const S3VideoPlayer = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const videoRef = useRef(null);
+  const playerRef = useRef(null);
 
-  // Handle form submission to set the custom video URL
+  useEffect(() => {
+    if (videoUrl) {
+      if (videoRef.current) {
+        const player = videojs(videoRef.current, {
+          controls: true,
+          autoplay: true, // Auto start video
+          sources: [{ src: videoUrl, type: 'application/x-mpegURL' }],
+          fluid: true, // Make the player fluid
+          techOrder: ['html5'], // Ensure HTML5 tech order
+        });
+
+        playerRef.current = player;
+
+        player.on('error', (event) => {
+          console.error('Video.js error:', event);
+          setErrorMessage('Error attempting to play the video.');
+        });
+
+        return () => {
+          if (playerRef.current) {
+            playerRef.current.dispose();
+          }
+        };
+      }
+    }
+  }, [videoUrl]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!videoUrl || videoUrl.trim() === '') {
@@ -14,9 +42,6 @@ const S3VideoPlayer = () => {
     }
     setErrorMessage('');
   };
-
-  // Check if the file is HLS (m3u8 format)
-  const isHLS = (url) => url.endsWith('.m3u8');
 
   return (
     <div>
@@ -33,18 +58,16 @@ const S3VideoPlayer = () => {
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
       {videoUrl && (
-        <ReactPlayer
-          url={videoUrl}
-          controls={true}  // Show player controls
-          width="640px"
-          height="360px"
-          playing={false}  // Video won't autoplay
-          config={{
-            file: {
-              forceHLS: isHLS(videoUrl),  // Force HLS if the file is m3u8
-            },
-          }}
-        />
+        <div>
+          <video
+            ref={videoRef}
+            className="video-js vjs-default-skin"
+            width="640"
+            height="360"
+            controls
+          >
+          </video>
+        </div>
       )}
     </div>
   );
