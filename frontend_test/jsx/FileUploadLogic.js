@@ -4,7 +4,7 @@ const backend_PORT = process.env.backend_PORT;
 const initiateUrl = `http://localhost:${backend_PORT}/initiate`;
 const uploadUrl = `http://localhost:${backend_PORT}/upload`;
 const completeUrl = `http://localhost:${backend_PORT}/complete`;
-const kafkaSendUrl = `http://localhost:${process.env.transcoder_PORT}/send`;
+const kafkaSendUrl = `http://${process.env.transcoder_HOST}:${process.env.transcoder_PORT}/send`;
 
 export async function uploadFileInChunks(file, onProgress) {
   const chunkSize = 100 * 1024 * 1024; // 100 MB

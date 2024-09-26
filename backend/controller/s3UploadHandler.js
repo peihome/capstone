@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const { PassThrough } = require('stream');
 
 const bucketName = process.env.s3BucketName;
 

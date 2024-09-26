@@ -4,7 +4,7 @@ import axios from 'axios';
 const backendPort = process.env.transcoder_PORT;
 const websocketPort = process.env.websocket_PORT;
 
-const backendUrl = `http://localhost:${backendPort}`;
+const backendUrl = `http://${process.env.transcoder_PORT}:${backendPort}`;
 const websocketUrl = `ws://localhost:${websocketPort}`;
 
 function KafkaProducer() {

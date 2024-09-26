@@ -15,6 +15,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//DB Init
+//require('../controller/dbInit.js');
+
+//Start PostGre Server
+require('../controller/postgre.js');
+
+//Start Cassandra Server
+require('../controller/cassandra.js');
+
 // Import and use request handlers
 require('../requestHandler/requestMapper.js')(app, upload);
 

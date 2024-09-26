@@ -20,7 +20,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], null));
+react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_KafkaProducer_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], null));
 
 /***/ }),
 
@@ -125,7 +125,7 @@ var backend_PORT = "8000";
 var initiateUrl = "http://localhost:".concat(backend_PORT, "/initiate");
 var uploadUrl = "http://localhost:".concat(backend_PORT, "/upload");
 var completeUrl = "http://localhost:".concat(backend_PORT, "/complete");
-var kafkaSendUrl = "http://localhost:".concat("8001", "/send");
+var kafkaSendUrl = "http://".concat("localhost", ":").concat("8001", "/send");
 function uploadFileInChunks(_x, _x2) {
   return _uploadFileInChunks.apply(this, arguments);
 }
@@ -291,7 +291,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 var backendPort = "8001";
 var websocketPort = "8080";
-var backendUrl = "http://localhost:".concat(backendPort);
+var backendUrl = "http://".concat("8001", ":").concat(backendPort);
 var websocketUrl = "ws://localhost:".concat(websocketPort);
 function KafkaProducer() {
   var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
