@@ -1,6 +1,7 @@
 const { client: pgClient, clientConf : pgConf } = require('../controller/postgre.js');
 const { Client } = require('pg');
 const { client: cassandraClient } = require('../controller/cassandra.js');
+const { client: esClient } = require('../controller/elasticSearch.js');
 
 async function initDB() {
     try {
@@ -165,7 +166,7 @@ async function initDB() {
 }
 
 
-const initializeCassandraDatabase = async () => {
+const initializeCassandraAndES = async () => {
     try {
 
         const cassandra_db = process.env.ec2_cassandra_db;
@@ -189,16 +190,6 @@ const initializeCassandraDatabase = async () => {
 
         // Create tables
         await cassandraClient.execute(`
-            CREATE TABLE IF NOT EXISTS video_rating (
-                video_id UUID,
-                tag SET<TEXT>,
-                rating INT,
-                created_at TIMESTAMP,
-                PRIMARY KEY (video_id, rating)  // video_id is the partition key, rating is the clustering key
-            ) WITH CLUSTERING ORDER BY (rating DESC);
-        `);
-
-        await cassandraClient.execute(`
             CREATE TABLE video_metadata_by_id (
                 video_id UUID PRIMARY KEY, 
                 title TEXT,
@@ -208,48 +199,103 @@ const initializeCassandraDatabase = async () => {
                 likes INT,
                 dislikes INT,
                 published_at TIMESTAMP,
-                thumbnail TEXT
+                thumbnail TEXT,
+                tag SET<TEXT>,
+                rating INT,
             );
         `);
 
         // Insert sample data
         await cassandraClient.execute(`
-            INSERT INTO video_rating (video_id, rating, tag, created_at)
-            VALUES (ee790d14-905f-48a6-a28d-137cf4a04d40, 100, {'React'}, toTimestamp(now()))
-        `);
-
-        await cassandraClient.execute(`
-            INSERT INTO video_rating (video_id, rating, tag, created_at)
-            VALUES (4aa80afb-e647-4d35-9baa-b5536e1856e1, 200, {'CSS'}, toTimestamp(now()))
-        `);
-
-        await cassandraClient.execute(`
-            INSERT INTO video_rating (video_id, rating, tag, created_at)
-            VALUES (fabddc02-08c6-4684-a0c9-f7011ca0638d, 400, {'React'}, toTimestamp(now()))
-        `);
-
-        await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail)
-            VALUES (ee790d14-905f-48a6-a28d-137cf4a04d40, 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080')
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+            VALUES (uuid(), 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080', {'Java'}, 400)
         `);
         
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail)
-            VALUES (4aa80afb-e647-4d35-9baa-b5536e1856e1, 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080')
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+            VALUES (uuid(), 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080', {'HTML'}, 300)
         `);
         
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail)
-            VALUES (fabddc02-08c6-4684-a0c9-f7011ca0638d, 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080')
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+            VALUES (uuid(), 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080', {'CSS'}, 500)
         `);
 
         console.log('Cassandra database initialized successfully');
+
+        await esInit();
     } catch (error) {
         console.error('Error initializing Cassandra database', error);
-    } finally {
-        await cassandraClient.shutdown();
     }
 };
 
+esInit = async () => {
+  const indexName = process.env.es_index;
+
+  try {
+    // Check if the index exists
+    const indexExists = await esClient.indices.exists({ index: indexName });
+
+    // Delete the index if it exists
+    if (indexExists) {
+      console.log(`Index ${indexName} already exists. Deleting...`);
+      await esClient.indices.delete({ index: indexName });
+      console.log(`Index ${indexName} deleted.`);
+    }
+
+    // Create a new index with the necessary mappings
+    console.log(`Creating new index ${indexName}...`);
+    await esClient.indices.create({
+      index: indexName,
+      body: {
+        mappings: {
+          properties: {
+            video_id: { type: 'keyword' }, // Store UUID as a keyword
+            tag: { type: 'keyword' },      // Store tags as a keyword (Elasticsearch equivalent of SET<TEXT>)
+            rating: { type: 'integer' },   // Store rating as an integer
+          },
+        },
+      },
+    });
+
+    console.log(`Index ${indexName} created successfully.`);
+
+    replicateToElasticsearch();
+  } catch (error) {
+    console.error('Error during Elasticsearch dbInit:', error);
+  }
+}
+
+replicateToElasticsearch = async () => {
+    try {
+      // Fetch data from Cassandra
+      const query = 'SELECT video_id, tag, rating FROM video_metadata_by_id';
+      const result = await cassandraClient.execute(query);
+  
+      // Iterate over the rows from Cassandra
+      for (const row of result.rows) {
+        const { video_id, tag, rating } = row;
+  
+        // Insert into Elasticsearch
+        await esClient.index({
+          index: process.env.es_index,
+          id: video_id.toString(),
+          body: {
+            video_id: video_id.toString(),
+            tag: [...tag],
+            rating: rating,
+          },
+        });
+  
+        console.log(`Inserted video_id: ${video_id} into Elasticsearch`);
+      }
+  
+      console.log('Replication from Cassandra to Elasticsearch completed.');
+    } catch (error) {
+      console.error('Error replicating data to Elasticsearch:', error);
+    }
+  }
+
+
 //initDB();
-initializeCassandraDatabase();
+initializeCassandraAndES();
