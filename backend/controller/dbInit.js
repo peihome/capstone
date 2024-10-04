@@ -6,7 +6,7 @@ const { client: esClient } = require('../controller/elasticSearch.js');
 async function initDB() {
     try {
 
-        await pgClient.end();
+        //await pgClient.end();
 
         // Connect to the default 'postgres' database first
         let postgresConf = { ...pgConf, database: 'postgres' };
@@ -33,7 +33,7 @@ async function initDB() {
             user_id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL,
+            status INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -112,10 +112,10 @@ async function initDB() {
         
         -- Insert Queries goes here
         -- Inserting sample data into USER table
-        INSERT INTO "USER" (name, email, password, created_at) VALUES
-        ('Alice Johnson', 'alice@example.com', 'password123', CURRENT_TIMESTAMP),
-        ('Bob Smith', 'bob@example.com', 'password456', CURRENT_TIMESTAMP),
-        ('Charlie Brown', 'charlie@example.com', 'password789', CURRENT_TIMESTAMP);
+        INSERT INTO "USER" (name, email, status, created_at) VALUES
+        ('Alice Johnson', 'alice@example.com', 1, CURRENT_TIMESTAMP),
+        ('Bob Smith', 'bob@example.com', 0, CURRENT_TIMESTAMP),
+        ('Charlie Brown', 'charlie@example.com', -1, CURRENT_TIMESTAMP);
 
         -- Inserting sample data into VIDEO table (using ETag and bucket_name)
         INSERT INTO "VIDEO" (title, description, etag, bucket_name, transcoding_status, user_id, created_at) VALUES
@@ -207,19 +207,225 @@ const initializeCassandraAndES = async () => {
 
         // Insert sample data
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (uuid(), 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080', {'Java'}, 400)
-        `);
-        
+          INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+          VALUES (uuid(), 'Video 1', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th2.jpg', {'Java'}, 400)
+      `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (uuid(), 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080', {'HTML'}, 300)
-        `);
-        
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 2', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th3.jpg', {'Java'}, 400)
+              `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (uuid(), 'Sample Video', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'http://localhost:8080', {'CSS'}, 500)
-        `);
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 3', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th4.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 4', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th5.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 5', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th6.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 6', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th7.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 7', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th8.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 8', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 9', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 10', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th10.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 11', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th11.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 1', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th2.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 2', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th3.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 3', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th4.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 4', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th5.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 5', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th6.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 6', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th7.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 7', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th8.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 8', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 9', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 10', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th10.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 11', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th11.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 1', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th2.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 2', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th3.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 3', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th4.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 4', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th5.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 5', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th6.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 6', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th7.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 7', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th8.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 8', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 9', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 10', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th10.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 11', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th11.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 1', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th2.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 2', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th3.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 3', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th4.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 4', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th5.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 5', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th6.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 6', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th7.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 7', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th8.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 8', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 9', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 10', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th10.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 11', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th11.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 1', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th2.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 2', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th3.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 3', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th4.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 4', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th5.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 5', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th6.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 6', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th7.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 7', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th8.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 8', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 9', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th9.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 10', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th10.jpg', {'Java'}, 400)
+              `);
+        await cassandraClient.execute(`
+                  INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
+                  VALUES (uuid(), 'Video 11', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th11.jpg', {'Java'}, 400)
+              `);
 
         console.log('Cassandra database initialized successfully');
 
@@ -230,11 +436,11 @@ const initializeCassandraAndES = async () => {
 };
 
 esInit = async () => {
-  const indexName = process.env.es_index;
+  let indexName = process.env.es_index_video_rating;
 
   try {
     // Check if the index exists
-    const indexExists = await esClient.indices.exists({ index: indexName });
+    let indexExists = await esClient.indices.exists({ index: indexName });
 
     // Delete the index if it exists
     if (indexExists) {
@@ -258,6 +464,27 @@ esInit = async () => {
       },
     });
 
+    indexName = process.env.es_index_users;
+    indexExists = await esClient.indices.exists({ index: indexName });
+
+    // Delete the index if it exists
+    if (indexExists) {
+      console.log(`Index ${indexName} already exists. Deleting...`);
+      await esClient.indices.delete({ index: indexName });
+      console.log(`Index ${indexName} deleted.`);
+    }
+
+    await esClient.indices.create({
+      index: indexName,
+      body: {
+        mappings: {
+          properties: {
+            email: { type: 'keyword' }
+          },
+        },
+      },
+    });
+
     console.log(`Index ${indexName} created successfully.`);
 
     replicateToElasticsearch();
@@ -269,8 +496,8 @@ esInit = async () => {
 replicateToElasticsearch = async () => {
     try {
       // Fetch data from Cassandra
-      const query = 'SELECT video_id, tag, rating FROM video_metadata_by_id';
-      const result = await cassandraClient.execute(query);
+      let query = 'SELECT video_id, tag, rating FROM video_metadata_by_id';
+      let result = await cassandraClient.execute(query);
   
       // Iterate over the rows from Cassandra
       for (const row of result.rows) {
@@ -278,7 +505,7 @@ replicateToElasticsearch = async () => {
   
         // Insert into Elasticsearch
         await esClient.index({
-          index: process.env.es_index,
+          index: process.env.es_index_video_rating,
           id: video_id.toString(),
           body: {
             video_id: video_id.toString(),
@@ -288,6 +515,27 @@ replicateToElasticsearch = async () => {
         });
   
         console.log(`Inserted video_id: ${video_id} into Elasticsearch`);
+      }
+
+
+      // Fetch data from Cassandra
+      query = 'SELECT user_id, email FROM "USER"';
+      result = await pgClient.query(query);
+
+      // Iterate over the rows from Cassandra
+      for (const row of result.rows) {
+        const { user_id, email } = row;
+
+        // Insert into Elasticsearch
+        await esClient.index({
+          index: process.env.es_index_users,
+          id: user_id.toString(), // Use user_id as the document ID
+          body: {
+            email: email
+          },
+        });
+
+        console.log(`Inserted user_id: ${user_id} into Elasticsearch`);
       }
   
       console.log('Replication from Cassandra to Elasticsearch completed.');

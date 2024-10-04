@@ -9,7 +9,7 @@ const client = new Client({
 const searchVideoRatings = async (query) => {
     try {
         const response = await client.search({
-            index: `${process.env.es_index}`,
+            index: `${process.env.es_index_video_rating}`,
             body: query
         });
         
@@ -20,6 +20,23 @@ const searchVideoRatings = async (query) => {
     }
 };
 
+// Function to search in the users index
+const searchUsers = async (query) => {
+    try {
+        const response = await client.search({
+            index: `${process.env.es_index_users}`,
+            body: query
+        });
+        
+        return response.hits;
+    } catch (error) {
+        console.error('Error searching users index:', error);
+        throw error;
+    }
+};
+
 module.exports = {
-    searchVideoRatings
+    searchVideoRatings,
+    searchUsers,
+    client
 };

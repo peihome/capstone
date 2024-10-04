@@ -12,10 +12,10 @@ const S3VideoPlayer = () => {
       if (videoRef.current) {
         const player = videojs(videoRef.current, {
           controls: true,
-          autoplay: true, // Auto start video
+          autoplay: true,
           sources: [{ src: videoUrl, type: 'application/x-mpegURL' }],
-          fluid: true, // Make the player fluid
-          techOrder: ['html5'], // Ensure HTML5 tech order
+          fluid: true,
+          techOrder: ['html5'],
         });
 
         playerRef.current = player;
@@ -44,8 +44,8 @@ const S3VideoPlayer = () => {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <div className="video-container">
+      <form onSubmit={handleSubmit} className="video-form">
         <input
           type="text"
           placeholder="Enter S3 Video or M3U8 URL"
@@ -58,15 +58,11 @@ const S3VideoPlayer = () => {
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
       {videoUrl && (
-        <div>
+        <div className="video-player-container">
           <video
             ref={videoRef}
             className="video-js vjs-default-skin"
-            width="640"
-            height="360"
-            controls
-          >
-          </video>
+          ></video>
         </div>
       )}
     </div>

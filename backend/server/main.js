@@ -1,6 +1,9 @@
 require('dotenv').config({ path: './variables.env' });
+//require('../controller/sessionKeyGenerator.js');
 
 const express = require('express');
+const session = require('express-session');
+const admin = require('../controller/firebaseAdmin.js'); // Import the Firebase Admin SDK client
 const app = express();
 const port = process.env.API_SERVER_PORT || 8000;
 const cors = require('cors');
@@ -14,6 +17,14 @@ const upload = multer({ storage: storage });
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Session middleware
+app.use(session({
+    secret: `${process.env.sessionKey}`,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true },
+}));
 
 //DB Init
 //require('../controller/dbInit.js');

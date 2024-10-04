@@ -13,6 +13,7 @@ const clientConf = {
 
 const client = new Client(clientConf);
 
+client.connect();
 
 module.exports = {
     client,

@@ -16,6 +16,20 @@
             "request": "launch",
             "command": "npm run start",
             "cwd": "${workspaceFolder}/transcoder"
+        },
+        {
+            "type": "node-terminal",
+            "name": "Run Script: start",
+            "request": "launch",
+            "command": "npm run start",
+            "cwd": "${workspaceFolder}/frontend_test"
+        },
+        {
+            "type": "node-terminal",
+            "name": "backend",
+            "request": "launch",
+            "command": "npm run start",
+            "cwd": "${workspaceFolder}/backend"
         }
     ]
 }
