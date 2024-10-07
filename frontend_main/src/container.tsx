@@ -6,7 +6,6 @@ import {
 	Search,
 	Moon,
 	Sun,
-	User,
 	Home,
 	PlaySquare,
 	Settings,
@@ -17,12 +16,21 @@ import {
 	Instagram,
 	Menu,
 	X,
+	LogOut,
+	User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDarkMode } from "./DarkModeContext";
 import { auth } from "@/firebase/firebase";
+import { signOut } from "firebase/auth";
 
 interface ContainerProps {
 	children: ReactNode;
@@ -32,28 +40,37 @@ export function Container({ children }: ContainerProps) {
 	const { isDarkMode, toggleDarkMode } = useDarkMode();
 	const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 	const [isMounted, setIsMounted] = useState(false);
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		setIsMounted(true);
+		const unsubscribe = auth.onAuthStateChanged((user) => {
+			setIsAuthenticated(!!user);
+		});
+		return () => unsubscribe();
 	}, []);
 
 	const toggleSideMenu = () => {
 		setIsSideMenuOpen(!isSideMenuOpen);
 	};
 
-	const handleUserIconClick = () => {
+	const handleLogout = async () => {
+		try {
+			await signOut(auth);
+			navigate("/");
+		} catch (error) {
+			console.error("Error signing out: ", error);
+		}
+	};
+
+	const handleUserProfile = () => {
 		const user = auth.currentUser;
-		if (user) {
-			const username = user.displayName;
-			if (username) {
-				navigate(`/${username}`);
-			} else {
-				console.error("Username not found");
-				navigate("/create-profile");
-			}
+		if (user && user.displayName) {
+			navigate(`/${user.displayName}`);
 		} else {
-			navigate("/login");
+			console.error("Username not found");
+			navigate("/create-profile");
 		}
 	};
 
@@ -106,14 +123,52 @@ export function Container({ children }: ContainerProps) {
 						) : (
 							<Sun className="h-4 w-4 text-yellow-500" />
 						)}
-						<Button
-							variant="ghost"
-							size="icon"
-							className="hover:bg-gray-200 dark:hover:bg-gray-700"
-							onClick={handleUserIconClick}
-						>
-							<User className="h-4 w-4" />
-						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="hover:bg-gray-200 dark:hover:bg-gray-700"
+								>
+									<Menu className="h-4 w-4" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{isAuthenticated ? (
+									<>
+										<DropdownMenuItem
+											onClick={handleUserProfile}
+										>
+											<User className="mr-2 h-4 w-4" />
+											<span>User Profile</span>
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={handleLogout}
+										>
+											<LogOut className="mr-2 h-4 w-4" />
+											<span>Logout</span>
+										</DropdownMenuItem>
+									</>
+								) : (
+									<>
+										<DropdownMenuItem
+											onClick={() => navigate("/login")}
+										>
+											<User className="mr-2 h-4 w-4" />
+											<span>Login</span>
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={() =>
+												navigate("/register")
+											}
+										>
+											<User className="mr-2 h-4 w-4" />
+											<span>Sign Up</span>
+										</DropdownMenuItem>
+									</>
+								)}
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
 				)}
 			</header>

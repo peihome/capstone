@@ -33,6 +33,9 @@ export default function ProfileCreationPage() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
+			if (!userId) {
+				throw new Error("User ID is undefined");
+			}
 			await setDoc(doc(db, "users", userId), {
 				userId,
 				username,
