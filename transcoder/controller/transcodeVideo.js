@@ -37,6 +37,19 @@ async function transcodeVideo(etag) {
 
         console.log('Master playlist created and uploaded successfully');
 
+        // Copy the original file to the new folder
+        await s3.copyObject({
+            Bucket: process.env.s3BucketName,
+            CopySource: `${process.env.s3BucketName}/${fileKey}`,
+            Key: `archived/${fileKey.replace(/ /g, '_')}`
+        }).promise();
+
+        // Delete the original file after copying
+        await s3.deleteObject({
+            Bucket: process.env.s3BucketName,
+            Key: fileKey
+        }).promise();
+
         // Cleanup local files
         const cleanupPaths = [localFilePath, ...downscaledFiles, masterPlaylistPath, ...resolutions.map(resolution => path.join(path.dirname(localFilePath), `${path.basename(fileKey.replace(/ /g, '_'), path.extname(fileKey.replace(/ /g, '_')))}_${resolution}`))];
         await cleanupLocalFiles(cleanupPaths);

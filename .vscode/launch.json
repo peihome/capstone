@@ -12,7 +12,7 @@
         },
         {
             "type": "node-terminal",
-            "name": "Run Script: start",
+            "name": "transcoder",
             "request": "launch",
             "command": "npm run start",
             "cwd": "${workspaceFolder}/transcoder"

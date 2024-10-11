@@ -20,7 +20,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], null));
+react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_FileUploadForm_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], null));
 
 /***/ }),
 
@@ -198,7 +198,7 @@ function _uploadFileInChunks() {
         case 26:
           completeResponse = _context.sent;
           //Produce Message to Kafka for ABS transcoding
-          finalETag = completeResponse.data.ETag;
+          finalETag = completeResponse.data.ETag.replace(/^"|"$/g, '');
           _context.next = 30;
           return axios__WEBPACK_IMPORTED_MODULE_0__["default"].post(kafkaSendUrl, {
             message: finalETag
@@ -291,7 +291,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 var backendPort = "8001";
 var websocketPort = "8080";
-var backendUrl = "http://".concat("8001", ":").concat(backendPort);
+var backendUrl = "http://".concat("localhost", ":").concat(backendPort);
 var websocketUrl = "ws://localhost:".concat(websocketPort);
 function KafkaProducer() {
   var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
