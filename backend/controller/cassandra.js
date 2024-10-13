@@ -2,8 +2,7 @@ const cassandra = require('cassandra-driver');
 
 const client = new cassandra.Client({
     contactPoints: [process.env.ec2_cassandra_host],
-    localDataCenter: process.env.ec2_cassandra_dc,
-    protocolOptions: { port: process.env.ec2_cassandra_port },
+    localDataCenter: process.env.ec2_cassandra_dc
 });
 
 client.connect()

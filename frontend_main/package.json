@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "start": "vite --host",
+    "buildapp": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build": "docker rmi -f frontend_main || true && docker build -t frontend_main ."
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.2",
