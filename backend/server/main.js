@@ -5,7 +5,7 @@ const express = require('express');
 const session = require('express-session');
 const admin = require('../controller/firebaseAdmin.js'); // Import the Firebase Admin SDK client
 const app = express();
-const port = process.env.API_SERVER_PORT || 8000;
+const port = process.env.backend_PORT || 8000;
 const cors = require('cors');
 
 // Multer setup to handle file uploads

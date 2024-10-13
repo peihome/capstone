@@ -5,7 +5,8 @@
   "main": "server/main.js",
   "scripts": {
     "start#": "npm install && node server/main.js",
-    "start": "npm install && nodemon server/main.js"
+    "start": "npm install && nodemon server/main.js",
+    "build": "docker rmi -f backend || true && docker build -t backend ."
   },
   "keywords": [],
   "author": "",
