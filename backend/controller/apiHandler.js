@@ -1,7 +1,5 @@
 const { client: cassandraClient } = require('../controller/cassandra.js');
-const { searchUsers, searchVideoRatings } = require('../controller/elasticSearch.js');
-const { client: pgClient } = require('../controller/postgre.js');
-const { client: esClient } = require('../controller/elasticSearch.js');
+const { searchVideoRatings } = require('../controller/elasticSearch.js');
 
 const moment = require('moment');
 
@@ -84,60 +82,6 @@ const getDashboard = async (req, res) => {
     }
 };
 
-const createUser = async (req, res) => {
-  const { name, email } = req.body;
-
-  if (!name || !email) {
-    return res.status(400).json({ message: 'Name and email are required' });
-  }
-
-  try {
-    // Check if the email already exists in Elasticsearch
-    const esQuery = {
-      query: {
-        match: {
-          email: email
-        }
-      }
-    };
-
-    const esResult = await searchUsers(esQuery);
-
-    // If any results were found in Elasticsearch, email already exists
-    if (esResult.total.value > 0) {
-      return res.status(409).json({ message: 'Email already exists' });
-    }
-
-    // If email doesn't exist in Elasticsearch, proceed with inserting into PostgreSQL
-    const query = `
-      INSERT INTO "USER" (name, email, status)
-      VALUES ($1, $2, 0)
-      RETURNING *;
-    `;
-    const values = [name, email];
-    const result = await pgClient.query(query, values);
-
-    // Insert the user info into Elasticsearch as well after inserting into PostgreSQL
-    const esInsert = {
-      index: 'users',
-      id: result.rows[0].user_id, // Use PostgreSQL's user_id as the Elasticsearch document ID
-      body: {
-        name: name,
-        email: email,
-        status: 0,
-        created_at: result.rows[0].created_at
-      }
-    };
-    await esClient.index(esInsert);
-
-    res.status(201).json({ user: result.rows[0] });
-  } catch (error) {
-    console.error('Error inserting user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-
 // API route for authenticating user with ID token
 const authenticate = async (req, res) => {
   const { idToken } = req.body;
@@ -158,4 +102,4 @@ const authenticate = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard, createUser, authenticate };
+module.exports = { getDashboard, authenticate };
