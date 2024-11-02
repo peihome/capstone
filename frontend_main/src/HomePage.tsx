@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +25,7 @@ export default function HomePage() {
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const navigate = useNavigate();
 
 	const fetchVideos = async (page: number) => {
 		setIsLoading(true);
@@ -58,7 +60,11 @@ export default function HomePage() {
 			{error && <p className="text-red-500 mb-4">{error}</p>}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{videos.map((video) => (
-					<VideoCard key={video.video_id} video={video} />
+					<VideoCard
+						key={video.video_id}
+						video={video}
+						onClick={() => navigate(`/video/1`)}
+					/>
 				))}
 			</div>
 			{hasMore && (
@@ -72,9 +78,9 @@ export default function HomePage() {
 	);
 }
 
-function VideoCard({ video }: { video: Video }) {
+function VideoCard({ video, onClick }: { video: Video; onClick: () => void }) {
 	return (
-		<Card className="overflow-hidden">
+		<Card className="overflow-hidden cursor-pointer" onClick={onClick}>
 			<CardContent className="p-0">
 				<div className="aspect-w-16 aspect-h-9">
 					<img
