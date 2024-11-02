@@ -8,6 +8,9 @@ import ForgotPassword from "./ForgotPassword";
 import ProfileCreationPage from "./ProfileCreationPage";
 import UserProfilePage from "./UserProfilePage";
 import HomePage from "./HomePage";
+import VideoPage from "./VideoPage";
+import VideoUploadPage from "./VideoUploadPage";
+import AdminDashboard from "./AdminDashboard";
 
 export default function App() {
 	return (
@@ -30,6 +33,9 @@ export default function App() {
 							path="/:username"
 							element={<UserProfilePage />}
 						/>
+						<Route path="/video/:videoId" element={<VideoPage />} />
+						<Route path="/upload" element={<VideoUploadPage />} />
+						<Route path="/admin" element={<AdminDashboard />} />
 					</Routes>
 				</Container>
 			</Router>
