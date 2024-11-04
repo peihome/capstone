@@ -10,6 +10,9 @@ const createChannel = async (req, res) => {
         return res.status(400).json({ error: 'Name and description are required fields.' });
     }
 
+    //Validate if the user already has a row in Channel table
+    TODO
+
     try {
         const query = `
         INSERT INTO "CHANNEL" (name, description, user_id, status_id)

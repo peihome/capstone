@@ -57,4 +57,50 @@ const getVideoDetails = async (req, res) => {
   }
 }
 
-module.exports = { createVideo , getVideoDetails};
+const createVideoVsReview = async (req, res) => {
+  const { video_id, status_id } = req.body;
+
+  try {
+    const query = `
+      INSERT INTO "VIDEO_VS_REVIEW" (video_id, status_id, reviewed_at)
+      VALUES ($1, $2, NOW())
+      RETURNING *
+    `;
+
+    const values = [video_id, status_id];
+    const result = await pgClient.query(query, values);
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating video vs review record:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const updateVideoVsReview = async (req, res) => {
+  const { review_id } = req.params;
+  const { video_id, status_id } = req.body;
+
+  try {
+    const query = `
+      UPDATE "VIDEO_VS_REVIEW"
+      SET video_id = $1, status_id = $2, reviewed_at = NOW()
+      WHERE review_id = $3
+      RETURNING *
+    `;
+
+    const values = [video_id, status_id, review_id];
+    const result = await pgClient.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Review record not found' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating video vs review record:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { createVideo , getVideoDetails, createVideoVsReview, updateVideoVsReview};

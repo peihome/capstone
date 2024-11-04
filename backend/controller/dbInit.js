@@ -242,136 +242,159 @@ async function initDB() {
             FOREIGN KEY (status_id) REFERENCES "APPEAL_STATUS"(status_id)
         );
 
+        CREATE TABLE IF NOT EXISTS "VIDEO_REVIEW_STATUS" (
+            status_id SERIAL PRIMARY KEY,
+            status_name VARCHAR(50) NOT NULL UNIQUE,
+            description TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS "VIDEO_VS_REVIEW" (
+            review_id SERIAL PRIMARY KEY,
+            video_id INT NOT NULL,
+            status_id INT NOT NULL,
+            reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE,
+            FOREIGN KEY (status_id) REFERENCES "VIDEO_REVIEW_STATUS"(status_id) ON DELETE CASCADE
+        );
+
+
+
         -- Insert Queries goes here
-        -- Inserting data into the ROLE table
+        -- Insert into ROLE table
         INSERT INTO "ROLE" (role_name, description) VALUES 
-        ('Admin', 'Administrator with full access rights'),
-        ('Moderator', 'Can manage user content and moderate channels'),
-        ('User', 'Regular user with basic access rights');
+        ('Admin', 'Administrator with full access'),
+        ('User', 'Standard user with limited access'),
+        ('Moderator', 'User with moderation privileges');
 
-        -- Inserting data into the USER_STATUS table
-        INSERT INTO "USER_STATUS" (status_id, status_name, description) VALUES 
-        (1, 'Active', 'User is active and can access the platform'),
-        (0, 'Inactive', 'User is inactive and cannot access the platform'),
-        (-1, 'Suspended', 'User is suspended due to violations');
+        -- Insert into USER_STATUS table
+        INSERT INTO "USER_STATUS" (status_name, description) VALUES 
+        ('Active', 'Active user account'),
+        ('Inactive', 'Inactive user account'),
+        ('Banned', 'User is banned from the platform');
 
-        -- Inserting data into the USER table
+        -- Insert into USER table
         INSERT INTO "USER" (name, email, status_id) VALUES 
-        ('Alice Johnson', 'alice@example.com', 1),
-        ('Bob Smith', 'bob@example.com', 1),
-        ('Charlie Brown', 'charlie@example.com', 2),
-        ('David Williams', 'david@example.com', 1),
-        ('Eva Green', 'eva@example.com', 3);
+        ('John Doe', 'john.doe@example.com', 1),
+        ('Jane Smith', 'jane.smith@example.com', 2),
+        ('Alice Brown', 'alice.brown@example.com', 1);
 
-        -- Inserting data into the USER_ROLE table
+        -- Insert into USER_ROLE table
         INSERT INTO "USER_ROLE" (user_id, role_id) VALUES 
-        (1, 1), -- Alice as Admin
-        (2, 2), -- Bob as Moderator
-        (3, 3), -- Charlie as User
-        (4, 3), -- David as User
-        (5, 3); -- Eva as User
+        (1, 1), 
+        (2, 2), 
+        (3, 3);
 
-        -- Inserting data into the CHANNEL_STATUS table
+        -- Insert into CHANNEL_STATUS table
         INSERT INTO "CHANNEL_STATUS" (status_name, description) VALUES 
-        ('Active', 'Channel is active and visible to users'),
-        ('Inactive', 'Channel is inactive and not visible to users'),
-        ('Suspended', 'Channel is suspended due to violations');
+        ('Active', 'Channel is active'),
+        ('Suspended', 'Channel is suspended'),
+        ('Archived', 'Channel is archived');
 
-        -- Inserting data into the CHANNEL table
+        -- Insert into CHANNEL table
         INSERT INTO "CHANNEL" (name, description, user_id, status_id) VALUES 
-        ('Tech Reviews', 'Channel dedicated to technology reviews', 1, 1),
-        ('Cooking Mastery', 'Channel sharing cooking recipes and techniques', 2, 1),
-        ('Travel Vlogs', 'Adventures and travel experiences', 4, 2);
+        ('Tech Talk', 'Technology discussions', 1, 1),
+        ('Travel Diaries', 'Travel and adventure', 2, 1),
+        ('Cooking Corner', 'Cooking and recipes', 3, 1);
 
-        -- Inserting data into the USER_VS_CHANNEL table
+        -- Insert into USER_VS_CHANNEL table
         INSERT INTO "USER_VS_CHANNEL" (user_id, channel_id) VALUES 
         (1, 1),
-        (2, 1),
-        (3, 2),
-        (4, 1),
-        (5, 3);
+        (2, 2),
+        (3, 3);
 
-        -- Inserting data into the VIDEO table
+        -- Insert into VIDEO table
         INSERT INTO "VIDEO" (title, description, etag, bucket_name, transcoding_status, user_id, channel_id, video_url) VALUES 
-        ('The Future of Tech', 'Exploring upcoming technologies', 'etag123', 'mybucket', 'Completed', 1, 1, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8'),
-        ('Delicious Pasta Recipe', 'How to make authentic pasta at home', 'etag124', 'mybucket', 'Completed', 2, 2, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8'),
-        ('Top 10 Travel Destinations', 'Must-visit places around the world', 'etag125', 'mybucket', 'Processing', 4, 3, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8');
+        ('Intro to Programming', 'Basic programming concepts', 'etag123', 'tech-videos', 'Completed', 1, 1, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8'),
+        ('Travel Vlog #1', 'My trip to Spain', 'etag124', 'travel-videos', 'Pending', 2, 2, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8'),
+        ('Baking Bread', 'How to bake bread at home', 'etag125', 'cooking-videos', 'Completed', 3, 3, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8');
 
-        -- Inserting data into the COMMENT table
+        -- Insert into COMMENT table
         INSERT INTO "COMMENT" (content, user_id, video_id) VALUES 
-        ('Great video! Very informative.', 3, 1),
-        ('I love this recipe, cant wait to try it!', 4, 2),
-        ('Amazing places, I want to visit them all!', 5, 3);
+        ('Great video!', 1, 1),
+        ('Very informative', 2, 1),
+        ('I loved the recipe', 3, 3);
 
-        -- Inserting data into the NOTIFICATION_TYPE table
+        -- Insert into NOTIFICATION_TYPE table
         INSERT INTO "NOTIFICATION_TYPE" (type_name) VALUES 
-        ('New Subscriber'),
         ('New Comment'),
-        ('New Video Uploaded');
+        ('Video Upload'),
+        ('Subscription Update');
 
-        -- Inserting data into the USERS_VS_NOTIFICATION table
+        -- Insert into USERS_VS_NOTIFICATION table
         INSERT INTO "USERS_VS_NOTIFICATION" (user_id, notification_type_id, is_enabled) VALUES 
         (1, 1, TRUE),
         (2, 2, TRUE),
         (3, 3, FALSE);
 
-        -- Inserting data into the NOTIFICATION table
+        -- Insert into NOTIFICATION table
         INSERT INTO "NOTIFICATION" (message, user_id, video_id) VALUES 
-        ('You have a new subscriber!', 1, NULL),
-        ('Your video received a new comment.', 2, 1),
-        ('Your video has been uploaded successfully.', 4, 3);
+        ('New comment on your video', 1, 1),
+        ('Your video has been uploaded', 2, 2),
+        ('You have a new subscriber', 3, NULL);
 
-        -- Inserting data into the SUBSCRIPTION table
+        -- Insert into SUBSCRIPTION table
         INSERT INTO "SUBSCRIPTION" (subscriber_id, subscribed_to_channel_id) VALUES 
-        (5, 1),
-        (4, 2),
-        (3, 3);
+        (1, 2),
+        (2, 3),
+        (3, 1);
 
-        -- Inserting data into the PLAYLIST table
+        -- Insert into PLAYLIST table
         INSERT INTO "PLAYLIST" (name, user_id) VALUES 
-        ('Favorite Tech Videos', 1),
-        ('Best Cooking Videos', 2);
+        ('Programming Basics', 1),
+        ('Travel Favorites', 2),
+        ('Cooking Tips', 3);
 
-        -- Inserting data into the VIDEO_PLAYLIST table
+        -- Insert into VIDEO_PLAYLIST table
         INSERT INTO "VIDEO_PLAYLIST" (video_id, playlist_id) VALUES 
         (1, 1),
-        (2, 2);
+        (2, 2),
+        (3, 3);
 
-        -- Inserting data into the TRANSCODING table
+        -- Insert into TRANSCODING table
         INSERT INTO "TRANSCODING" (video_id, status) VALUES 
         (1, 'Completed'),
-        (2, 'In Progress');
+        (2, 'In Progress'),
+        (3, 'Pending');
 
-        -- Inserting data into the DISPUTE_STATUS table
+        -- Insert into DISPUTE_STATUS table
         INSERT INTO "DISPUTE_STATUS" (status_name, description) VALUES 
-        ('Open', 'Dispute is currently open and under review'),
+        ('Open', 'Dispute is open and unresolved'),
         ('Resolved', 'Dispute has been resolved');
 
-        -- Inserting data into the DISPUTE_TYPE table
+        -- Insert into DISPUTE_TYPE table
         INSERT INTO "DISPUTE_TYPE" (type_name, description) VALUES 
-        ('Copyright Infringement', 'Reported for copyright issues'),
-        ('Harassment', 'Reported for harassment behavior');
+        ('Copyright', 'Copyright infringement'),
+        ('Inappropriate Content', 'Content violates guidelines');
 
-        -- Inserting data into the DISPUTE table
+        -- Insert into DISPUTE table
         INSERT INTO "DISPUTE" (video_id, reporter_id, dispute_type_id, status_id) VALUES 
-        (1, 3, 1, 1),
-        (2, 4, 2, 1);
+        (1, 1, 1, 1),
+        (2, 2, 2, 2);
 
-        -- Inserting data into the APPEAL_TYPE table
+        -- Insert into APPEAL_TYPE table
         INSERT INTO "APPEAL_TYPE" (type_name, description) VALUES 
-        ('Copyright Appeal', 'Appeal against copyright disputes'),
-        ('General Appeal', 'General appeal for any issue');
+        ('Content Review', 'Request to review flagged content'),
+        ('Account Suspension', 'Appeal for account suspension');
 
-        -- Inserting data into the APPEAL_STATUS table
+        -- Insert into APPEAL_STATUS table
         INSERT INTO "APPEAL_STATUS" (status_name, description) VALUES 
         ('Pending', 'Appeal is pending review'),
-        ('Accepted', 'Appeal has been accepted'),
-        ('Rejected', 'Appeal has been rejected');
+        ('Approved', 'Appeal has been approved');
 
-        -- Inserting data into the APPEAL_REQUEST table
+        -- Insert into APPEAL_REQUEST table
         INSERT INTO "APPEAL_REQUEST" (user_id, appeal_type_id, video_id, reason, status_id) VALUES 
-        (3, 1, 1, 'I believe this video does not infringe any copyright.', 1),
-        (4, 2, NULL, 'Requesting a review of my account status.', 1);
+        (1, 1, 1, 'Please review my content', 1),
+        (2, 2, NULL, 'Unfair suspension', 1);
+
+        -- Insert into VIDEO_REVIEW_STATUS table
+        INSERT INTO "VIDEO_REVIEW_STATUS" (status_name, description) VALUES 
+        ('Under Review', 'Video is currently under review'),
+        ('Approved', 'Video has been approved');
+
+        -- Insert into VIDEO_VS_REVIEW table
+        INSERT INTO "VIDEO_VS_REVIEW" (video_id, status_id) VALUES 
+        (1, 1),
+        (2, 2);
         
         `;
 
