@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "506794822616",
+    "project_id": "nexstreamlive-46978",
+    "storage_bucket": "nexstreamlive-46978.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506794822616:android:e9328f2534a7780a8640ad",
+        "android_client_info": {
+          "package_name": "com.example.nexstream"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBB77xRzF1HyGi7bda-_K14BlMgajM5zN8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506794822616:android:06dee7c22c9790a48640ad",
+        "android_client_info": {
+          "package_name": "com.example.nextstream1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBB77xRzF1HyGi7bda-_K14BlMgajM5zN8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
