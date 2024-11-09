@@ -192,6 +192,7 @@ export function Container({ children }: ContainerProps) {
 							<Button
 								variant="ghost"
 								className="w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700"
+								onClick={() => navigate("/")}
 							>
 								<Home className="mr-2 h-4 w-4" /> Home
 							</Button>
@@ -225,13 +226,13 @@ export function Container({ children }: ContainerProps) {
 						<div className="mt-auto space-y-4">
 							<div className="grid grid-cols-2 gap-2 text-xs">
 								<a
-									href="#"
+									href="/about"
 									className="hover:underline text-gray-600 dark:text-gray-400"
 								>
 									About
 								</a>
 								<a
-									href="#"
+									href="/press"
 									className="hover:underline text-gray-600 dark:text-gray-400"
 								>
 									Press
@@ -243,7 +244,7 @@ export function Container({ children }: ContainerProps) {
 									Copyright
 								</a>
 								<a
-									href="#"
+									href="/contact"
 									className="hover:underline text-gray-600 dark:text-gray-400"
 								>
 									Contact us

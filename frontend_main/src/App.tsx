@@ -11,6 +11,9 @@ import HomePage from "./HomePage";
 import VideoPage from "./VideoPage";
 import VideoUploadPage from "./VideoUploadPage";
 import AdminDashboard from "./AdminDashboard";
+import About from "./AboutPage";
+import Press from "./PressPage";
+import Contact from "./ContactPage";
 
 export default function App() {
 	return (
@@ -36,6 +39,9 @@ export default function App() {
 						<Route path="/video/:videoId" element={<VideoPage />} />
 						<Route path="/upload" element={<VideoUploadPage />} />
 						<Route path="/admin" element={<AdminDashboard />} />
+						<Route path="/about" element={<About />} />
+						<Route path="/press" element={<Press />} />
+						<Route path="/contact" element={<Contact />} />
 					</Routes>
 				</Container>
 			</Router>
