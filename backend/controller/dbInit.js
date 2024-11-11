@@ -27,7 +27,8 @@ async function initDB() {
         await newPostgresClient.connect();
 
         const queries = `
-        
+        CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
         -- Creating the ROLE table
         CREATE TABLE IF NOT EXISTS "ROLE" (
             role_id SERIAL PRIMARY KEY,
@@ -44,7 +45,7 @@ async function initDB() {
 
         -- Creating the USER table
         CREATE TABLE IF NOT EXISTS "USER" (
-            user_id SERIAL PRIMARY KEY,
+            user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             name VARCHAR(255) NOT NULL,
             email VARCHAR(255) NOT NULL UNIQUE,
             status_id INT NOT NULL,
@@ -55,7 +56,7 @@ async function initDB() {
         -- Creating the USER_ROLE table
         CREATE TABLE IF NOT EXISTS "USER_ROLE" (
             user_role_id SERIAL PRIMARY KEY,
-            user_id INT NOT NULL,
+            user_id UUID NOT NULL,
             role_id INT NOT NULL,
             assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
@@ -71,10 +72,10 @@ async function initDB() {
 
         -- Creating the CHANNEL table
         CREATE TABLE IF NOT EXISTS "CHANNEL" (
-            channel_id SERIAL PRIMARY KEY,
+            channel_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             name VARCHAR(255) NOT NULL,
             description TEXT,
-            user_id INT,
+            user_id UUID,
             status_id INT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
@@ -84,8 +85,8 @@ async function initDB() {
         -- Creating the USER_CHANNEL table to store userIdVsChannelId details
         CREATE TABLE IF NOT EXISTS "USER_VS_CHANNEL" (
             user_vs_channel_id SERIAL PRIMARY KEY,
-            user_id INT,
-            channel_id INT,
+            user_id UUID,
+            channel_id UUID,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
             FOREIGN KEY (channel_id) REFERENCES "CHANNEL"(channel_id) ON DELETE CASCADE
@@ -93,26 +94,27 @@ async function initDB() {
 
         -- Creating the VIDEO table with ETag and bucket_name instead of URL
         CREATE TABLE IF NOT EXISTS "VIDEO" (
-            video_id SERIAL PRIMARY KEY,
+            video_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             title VARCHAR(255) NOT NULL,
             description TEXT,
             etag VARCHAR(255) NOT NULL,  -- S3 ETag for identifying the video file
             bucket_name VARCHAR(255) NOT NULL,  -- S3 bucket where the file is stored
             transcoding_status VARCHAR(50),
-            user_id INT,
+            user_id UUID,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             video_url TEXT,
-            channel_id INT,
+            thumbnail_url TEXT,
+            channel_id UUID,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
             FOREIGN KEY (channel_id) REFERENCES "CHANNEL"(channel_id) ON DELETE CASCADE
         );
 
         -- Creating the COMMENT table
         CREATE TABLE IF NOT EXISTS "COMMENT" (
-            comment_id SERIAL PRIMARY KEY,
+            comment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             content TEXT,
-            user_id INT,
-            video_id INT,
+            user_id UUID,
+            video_id UUID,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
             FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE
@@ -127,7 +129,7 @@ async function initDB() {
         -- Creating the USERS_VS_NOTIFICATION table
         CREATE TABLE IF NOT EXISTS "USERS_VS_NOTIFICATION" (
             user_vs_notification_id SERIAL PRIMARY KEY,
-            user_id INT NOT NULL,
+            user_id UUID NOT NULL,
             notification_type_id INT NOT NULL,
             is_enabled BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -139,8 +141,8 @@ async function initDB() {
         -- Creating the SUBSCRIPTION table
         CREATE TABLE IF NOT EXISTS "SUBSCRIPTION" (
             sub_id SERIAL PRIMARY KEY,
-            subscriber_id INT,
-            subscribed_to_channel_id INT,
+            subscriber_id UUID,
+            subscribed_to_channel_id UUID,
             subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (subscriber_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
             FOREIGN KEY (subscribed_to_channel_id) REFERENCES "CHANNEL"(channel_id) ON DELETE CASCADE
@@ -148,9 +150,9 @@ async function initDB() {
 
         -- Creating the PLAYLIST table
         CREATE TABLE IF NOT EXISTS "PLAYLIST" (
-            playlist_id SERIAL PRIMARY KEY,
+            playlist_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             name VARCHAR(255),
-            user_id INT,
+            user_id UUID,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE
         );
@@ -158,16 +160,22 @@ async function initDB() {
         -- Creating the VIDEO_PLAYLIST table
         CREATE TABLE IF NOT EXISTS "VIDEO_PLAYLIST" (
             video_playlist_id SERIAL PRIMARY KEY,
-            video_id INT,
-            playlist_id INT,
+            video_id UUID,
+            playlist_id UUID,
             FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE,
             FOREIGN KEY (playlist_id) REFERENCES "PLAYLIST"(playlist_id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS "VIDEO_REVIEW_STATUS" (
+            status_id SERIAL PRIMARY KEY,
+            status_name VARCHAR(50) NOT NULL UNIQUE,
+            description TEXT
         );
 
         -- Creating the TRANSCODING table
         CREATE TABLE IF NOT EXISTS "TRANSCODING" (
             trans_id SERIAL PRIMARY KEY,
-            video_id INT,
+            video_id UUID,
             status_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             completed_at TIMESTAMP NULL,
@@ -192,8 +200,8 @@ async function initDB() {
         -- Creating the DISPUTE table
         CREATE TABLE IF NOT EXISTS "DISPUTE" (
             dispute_id SERIAL PRIMARY KEY,
-            video_id INT NOT NULL, 
-            reporter_id INT NOT NULL,
+            video_id UUID NOT NULL, 
+            reporter_id UUID NOT NULL,
             dispute_type_id INT NOT NULL,
             status_id INT NOT NULL,
             reported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -216,11 +224,11 @@ async function initDB() {
         );
 
         CREATE TABLE IF NOT EXISTS "APPEAL_REQUEST" (
-            appeal_id SERIAL PRIMARY KEY,
-            user_id INT NOT NULL,
+            appeal_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID NOT NULL,
             appeal_type_id INT NOT NULL,
-            video_id INT NULL,
-            channel_id INT NULL,
+            video_id UUID NULL,
+            channel_id UUID NULL,
             reason TEXT NOT NULL,
             status_id INT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -232,15 +240,9 @@ async function initDB() {
             FOREIGN KEY (status_id) REFERENCES "APPEAL_STATUS"(status_id)
         );
 
-        CREATE TABLE IF NOT EXISTS "VIDEO_REVIEW_STATUS" (
-            status_id SERIAL PRIMARY KEY,
-            status_name VARCHAR(50) NOT NULL UNIQUE,
-            description TEXT
-        );
-
         CREATE TABLE IF NOT EXISTS "VIDEO_VS_REVIEW" (
-            review_id SERIAL PRIMARY KEY,
-            video_id INT NOT NULL,
+            review_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            video_id UUID NOT NULL,
             status_id INT NOT NULL,
             reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE,
@@ -250,135 +252,121 @@ async function initDB() {
 
 
         -- Insert Queries goes here
-        -- Insert into ROLE table
-        INSERT INTO "ROLE" (role_name, description) VALUES 
-        ('Admin', 'Administrator with full access'),
-        ('User', 'Standard user with limited access'),
-        ('Moderator', 'User with moderation privileges');
+        -- Inserting into ROLE table
+        -- Inserting into VIDEO_REVIEW_STATUS table
+        INSERT INTO "VIDEO_REVIEW_STATUS" (status_id, status_name, description) VALUES
+        (0, 'Pending', 'Review is pending and has not been processed yet'),
+        (1, 'Approved', 'Review has been approved'),
+        (-1, 'Rejected', 'Review has been rejected due to violation of guidelines');
 
-        -- Insert into USER_STATUS table
-        INSERT INTO "USER_STATUS" (status_name, description) VALUES 
-        ('Active', 'Active user account'),
-        ('Inactive', 'Inactive user account'),
-        ('Banned', 'User is banned from the platform');
+        INSERT INTO "ROLE" (role_name, description) VALUES
+        ('Admin', 'Administrator role with full access'),
+        ('User', 'Standard user with limited access');
 
-        -- Insert into USER table
-        INSERT INTO "USER" (name, email, status_id) VALUES 
-        ('John Doe', 'john.doe@example.com', 1),
-        ('Jane Smith', 'jane.smith@example.com', 2),
-        ('Alice Brown', 'alice.brown@example.com', 1);
+        -- Inserting into USER_STATUS table
+        INSERT INTO "USER_STATUS" (status_name, description) VALUES
+        ('Active', 'User is active and can perform actions'),
+        ('Inactive', 'User is inactive and cannot perform actions');
 
-        -- Insert into USER_ROLE table
-        INSERT INTO "USER_ROLE" (user_id, role_id) VALUES 
-        (1, 1), 
-        (2, 2), 
-        (3, 3);
+        -- Inserting into USER table
+        INSERT INTO "USER" (user_id, name, email, status_id) VALUES
+        ('a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 'John Doe', 'john.doe@example.com', 1),
+        ('f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 'Jane Smith', 'jane.smith@example.com', 1);
 
-        -- Insert into CHANNEL_STATUS table
-        INSERT INTO "CHANNEL_STATUS" (status_name, description) VALUES 
-        ('Active', 'Channel is active'),
-        ('Suspended', 'Channel is suspended'),
-        ('Archived', 'Channel is archived');
+        -- Inserting into USER_ROLE table
+        INSERT INTO "USER_ROLE" (user_id, role_id) VALUES
+        ('a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 1),
+        ('f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 2);
 
-        -- Insert into CHANNEL table
-        INSERT INTO "CHANNEL" (name, description, user_id, status_id) VALUES 
-        ('Tech Talk', 'Technology discussions', 1, 1),
-        ('Travel Diaries', 'Travel and adventure', 2, 1),
-        ('Cooking Corner', 'Cooking and recipes', 3, 1);
+        -- Inserting into CHANNEL_STATUS table
+        INSERT INTO "CHANNEL_STATUS" (status_name, description) VALUES
+        ('Active', 'Channel is active and can broadcast content'),
+        ('Inactive', 'Channel is inactive and cannot broadcast content');
 
-        -- Insert into USER_VS_CHANNEL table
-        INSERT INTO "USER_VS_CHANNEL" (user_id, channel_id) VALUES 
-        (1, 1),
-        (2, 2),
-        (3, 3);
+        -- Inserting into CHANNEL table
+        INSERT INTO "CHANNEL" (channel_id, name, description, user_id, status_id) VALUES
+        ('b3e2f383-bbdf-41b1-baba-d77282654e1d', 'Tech Channel', 'A channel for tech discussions', 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 1),
+        ('8bb4e74f-b6d9-41e0-82d2-9a46c684762d', 'Gaming Channel', 'A channel for gaming content', 'f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 1);
 
-        -- Insert into VIDEO table
-        INSERT INTO "VIDEO" (title, description, etag, bucket_name, transcoding_status, user_id, channel_id, video_url) VALUES 
-        ('Intro to Programming', 'Basic programming concepts', 'etag123', 'tech-videos', 'Completed', 1, 1, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8'),
-        ('Travel Vlog #1', 'My trip to Spain', 'etag124', 'travel-videos', 'Pending', 2, 2, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8'),
-        ('Baking Bread', 'How to bake bread at home', 'etag125', 'cooking-videos', 'Completed', 3, 3, 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8');
+        -- Inserting into USER_VS_CHANNEL table
+        INSERT INTO "USER_VS_CHANNEL" (user_id, channel_id) VALUES
+        ('a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 'b3e2f383-bbdf-41b1-baba-d77282654e1d'),
+        ('f9bcf29e-daf8-4933-8e93-2e7b017c68b2', '8bb4e74f-b6d9-41e0-82d2-9a46c684762d');
 
-        -- Insert into COMMENT table
-        INSERT INTO "COMMENT" (content, user_id, video_id) VALUES 
-        ('Great video!', 1, 1),
-        ('Very informative', 2, 1),
-        ('I loved the recipe', 3, 3);
+        -- Inserting into VIDEO table
+        INSERT INTO "VIDEO" (video_id, title, description, etag, bucket_name, transcoding_status, user_id, video_url, channel_id) VALUES
+        ('d3eb7b89-89b1-4067-967d-625bf438b173', 'Tech Tutorial 1', 'A basic tech tutorial', 'etag_abc123', 'tech_bucket', 'Completed', 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8', 'b3e2f383-bbdf-41b1-baba-d77282654e1d'),
+        ('7f12bce6-9abf-4e45-bf7a-bd7356d8db6e', 'Gaming Tips', 'Best gaming strategies', 'etag_xyz456', 'gaming_bucket', 'Pending', 'f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/2_Minute_Timer.mp4/master.m3u8', '8bb4e74f-b6d9-41e0-82d2-9a46c684762d');
 
-        -- Insert into NOTIFICATION_TYPE table
-        INSERT INTO "NOTIFICATION_TYPE" (type_name) VALUES 
-        ('New Comment'),
-        ('Video Upload'),
-        ('Subscription Update');
+        -- Inserting into COMMENT table
+        INSERT INTO "COMMENT" (comment_id, content, user_id, video_id) VALUES
+        ('f36a22c7-89c9-4e77-bf66-b34cc6bc9c0f', 'Great video!', 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 'd3eb7b89-89b1-4067-967d-625bf438b173'),
+        ('bb3d7e97-88f2-43c4-b8fd-76d1a9d98b3f', 'Very helpful!', 'f9bcf29e-daf8-4933-8e93-2e7b017c68b2', '7f12bce6-9abf-4e45-bf7a-bd7356d8db6e');
 
-        -- Insert into USERS_VS_NOTIFICATION table
-        INSERT INTO "USERS_VS_NOTIFICATION" (user_id, notification_type_id, is_enabled) VALUES 
-        (1, 1, TRUE),
-        (2, 2, TRUE),
-        (3, 3, FALSE);
+        -- Inserting into NOTIFICATION_TYPE table
+        INSERT INTO "NOTIFICATION_TYPE" (type_name) VALUES
+        ('Video Uploaded'),
+        ('Comment Received');
 
-        -- Insert into SUBSCRIPTION table
-        INSERT INTO "SUBSCRIPTION" (subscriber_id, subscribed_to_channel_id) VALUES 
-        (1, 2),
-        (2, 3),
-        (3, 1);
+        -- Inserting into USERS_VS_NOTIFICATION table
+        INSERT INTO "USERS_VS_NOTIFICATION" (user_id, notification_type_id) VALUES
+        ('a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 1),
+        ('f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 2);
 
-        -- Insert into PLAYLIST table
-        INSERT INTO "PLAYLIST" (name, user_id) VALUES 
-        ('Programming Basics', 1),
-        ('Travel Favorites', 2),
-        ('Cooking Tips', 3);
+        -- Inserting into SUBSCRIPTION table
+        INSERT INTO "SUBSCRIPTION" (subscriber_id, subscribed_to_channel_id) VALUES
+        ('a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', '8bb4e74f-b6d9-41e0-82d2-9a46c684762d'),
+        ('f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 'b3e2f383-bbdf-41b1-baba-d77282654e1d');
 
-        -- Insert into VIDEO_PLAYLIST table
-        INSERT INTO "VIDEO_PLAYLIST" (video_id, playlist_id) VALUES 
-        (1, 1),
-        (2, 2),
-        (3, 3);
+        -- Inserting into PLAYLIST table
+        INSERT INTO "PLAYLIST" (playlist_id, name, user_id) VALUES
+        ('111fa56b-8e5a-4671-b0de-20754f9d9572', 'Tech Videos', 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f'),
+        ('7d81b5c8-f4c5-43f3-b8f0-2c9c9e295743', 'Gaming Highlights', 'f9bcf29e-daf8-4933-8e93-2e7b017c68b2');
 
-        -- Insert into TRANSCODING table
-        INSERT INTO "TRANSCODING" (video_id, status) VALUES 
-        (1, 1),
-        (2, 2),
-        (3, 1);
+        -- Inserting into VIDEO_PLAYLIST table
+        INSERT INTO "VIDEO_PLAYLIST" (video_id, playlist_id) VALUES
+        ('d3eb7b89-89b1-4067-967d-625bf438b173', '111fa56b-8e5a-4671-b0de-20754f9d9572'),
+        ('7f12bce6-9abf-4e45-bf7a-bd7356d8db6e', '7d81b5c8-f4c5-43f3-b8f0-2c9c9e295743');
 
-        -- Insert into DISPUTE_STATUS table
-        INSERT INTO "DISPUTE_STATUS" (status_name, description) VALUES 
-        ('Open', 'Dispute is open and unresolved'),
-        ('Resolved', 'Dispute has been resolved');
+        -- Inserting into TRANSCODING table
+        INSERT INTO "TRANSCODING" (video_id, status_id) VALUES
+        ('d3eb7b89-89b1-4067-967d-625bf438b173', 1),
+        ('7f12bce6-9abf-4e45-bf7a-bd7356d8db6e', 0);
 
-        -- Insert into DISPUTE_TYPE table
-        INSERT INTO "DISPUTE_TYPE" (type_name, description) VALUES 
-        ('Copyright', 'Copyright infringement'),
-        ('Inappropriate Content', 'Content violates guidelines');
+        -- Inserting into DISPUTE_STATUS table
+        INSERT INTO "DISPUTE_STATUS" (status_name) VALUES
+        ('Pending'),
+        ('Resolved');
 
-        -- Insert into DISPUTE table
-        INSERT INTO "DISPUTE" (video_id, reporter_id, dispute_type_id, status_id) VALUES 
-        (1, 1, 1, 1),
-        (2, 2, 2, 2);
+        -- Inserting into DISPUTE_TYPE table
+        INSERT INTO "DISPUTE_TYPE" (type_name, description) VALUES
+        ('Copyright', 'Claiming copyright infringement'),
+        ('Content', 'Inappropriate content');
 
-        -- Insert into APPEAL_TYPE table
-        INSERT INTO "APPEAL_TYPE" (type_name, description) VALUES 
-        ('Content Review', 'Request to review flagged content'),
-        ('Account Suspension', 'Appeal for account suspension');
+        -- Inserting into DISPUTE table
+        INSERT INTO "DISPUTE" (video_id, reporter_id, dispute_type_id, status_id) VALUES
+        ('d3eb7b89-89b1-4067-967d-625bf438b173', 'f9bcf29e-daf8-4933-8e93-2e7b017c68b2', 1, 1),
+        ('7f12bce6-9abf-4e45-bf7a-bd7356d8db6e', 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 2, 2);
 
-        -- Insert into APPEAL_STATUS table
-        INSERT INTO "APPEAL_STATUS" (status_name, description) VALUES 
-        ('Pending', 'Appeal is pending review'),
-        ('Approved', 'Appeal has been approved');
+        -- Inserting into APPEAL_TYPE table
+        INSERT INTO "APPEAL_TYPE" (type_name) VALUES
+        ('Copyright Claim'),
+        ('Content Removal');
 
-        -- Insert into APPEAL_REQUEST table
-        INSERT INTO "APPEAL_REQUEST" (user_id, appeal_type_id, video_id, reason, status_id) VALUES 
-        (1, 1, 1, 'Please review my content', 1),
-        (2, 2, NULL, 'Unfair suspension', 1);
+        -- Inserting into APPEAL_STATUS table
+        INSERT INTO "APPEAL_STATUS" (status_name) VALUES
+        ('Pending'),
+        ('Approved');
 
-        -- Insert into VIDEO_REVIEW_STATUS table
-        INSERT INTO "VIDEO_REVIEW_STATUS" (status_name, description) VALUES 
-        ('Under Review', 'Video is currently under review'),
-        ('Approved', 'Video has been approved');
+        -- Inserting into APPEAL_REQUEST table
+        INSERT INTO "APPEAL_REQUEST" (appeal_type_id, user_id, appeal_id, status_id, reason) VALUES
+        (1, 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f', 'e3eb7c89-89b1-4067-967d-625bf438b173', 1, 'Interesting...'),
+        (2, 'f9bcf29e-daf8-4933-8e93-2e7b017c68b2', '1f12bfe6-9abf-4e45-bf7a-bd7356d8db6e', 2, 'Not my issue...');
 
-        -- Insert into VIDEO_VS_REVIEW table
-        INSERT INTO "VIDEO_VS_REVIEW" (video_id, status_id) VALUES 
-        (1, 1),
-        (2, 2);
+        -- Inserting into VIDEO_VS_REVIEW table
+        INSERT INTO "VIDEO_VS_REVIEW" (video_id, status_id) VALUES
+        ('d3eb7b89-89b1-4067-967d-625bf438b173', 1),
+        ('7f12bce6-9abf-4e45-bf7a-bd7356d8db6e', 0);
         
         `;
 
