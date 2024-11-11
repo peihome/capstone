@@ -4,6 +4,10 @@ const {createVideo, getVideoDetails, updateVideoVsReview, createVideoVsReview} =
 const {confirmUser, createUser} = require('../model/table_USER.js');
 const {createChannel} = require('../model/table_CHANNEL.js');
 const {getVideoComments} = require('../model/table_COMMENT.js');
+const {handleUserNotification} = require('../model/table_USERS_VS_NOTIFICATION.js');
+const {subscribeToChannel, unsubscribeFromChannel} = require('../model/table_SUBSCRIPTION.js');
+const { createDispute, updateDisputeStatus } = require('../model/table_DISPUTE.js');
+const { createAppealRequest, updateAppealStatus } = require('../model/table_APPEAL_REQUEST.js');
 
 module.exports = (app, upload) => {
 
@@ -21,6 +25,17 @@ module.exports = (app, upload) => {
   app.post('/api/video', createVideo);
   app.post('/api/user/confirm', confirmUser);
   app.post('/api/channel', createChannel);
+  
+  app.put('/api/notification', handleUserNotification);
+
+  app.post('/api/subscribe/:channel_id', subscribeToChannel);
+  app.delete('/api/subscribe/:channel_id', unsubscribeFromChannel);
+
+  app.post('/api/dispute', createDispute);
+  app.put('/api/dispute', updateDisputeStatus);
+
+  app.post('/api/appeal', createAppealRequest);
+  app.put('/api/appeal', updateAppealStatus);
 
   app.get('/api/dashboard', getDashboard);
   app.get('/video/:uuid', getVideoDetails);
