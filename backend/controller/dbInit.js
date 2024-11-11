@@ -136,17 +136,6 @@ async function initDB() {
             UNIQUE (user_id, notification_type_id)
         );
 
-        -- Creating the NOTIFICATION table
-        CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
-            notification_id SERIAL PRIMARY KEY,
-            message VARCHAR(255),
-            user_id INT,
-            video_id INT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
-            FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE
-        );
-
         -- Creating the SUBSCRIPTION table
         CREATE TABLE IF NOT EXISTS "SUBSCRIPTION" (
             sub_id SERIAL PRIMARY KEY,
@@ -179,10 +168,11 @@ async function initDB() {
         CREATE TABLE IF NOT EXISTS "TRANSCODING" (
             trans_id SERIAL PRIMARY KEY,
             video_id INT,
-            status VARCHAR(50),
+            status_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             completed_at TIMESTAMP NULL,
-            FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE
+            FOREIGN KEY (video_id) REFERENCES "VIDEO"(video_id) ON DELETE CASCADE,
+            FOREIGN KEY (status_id) REFERENCES "VIDEO_REVIEW_STATUS"(status_id) ON DELETE CASCADE
         );
 
         -- Creating the DISPUTE_STATUS table
@@ -326,12 +316,6 @@ async function initDB() {
         (2, 2, TRUE),
         (3, 3, FALSE);
 
-        -- Insert into NOTIFICATION table
-        INSERT INTO "NOTIFICATION" (message, user_id, video_id) VALUES 
-        ('New comment on your video', 1, 1),
-        ('Your video has been uploaded', 2, 2),
-        ('You have a new subscriber', 3, NULL);
-
         -- Insert into SUBSCRIPTION table
         INSERT INTO "SUBSCRIPTION" (subscriber_id, subscribed_to_channel_id) VALUES 
         (1, 2),
@@ -352,9 +336,9 @@ async function initDB() {
 
         -- Insert into TRANSCODING table
         INSERT INTO "TRANSCODING" (video_id, status) VALUES 
-        (1, 'Completed'),
-        (2, 'In Progress'),
-        (3, 'Pending');
+        (1, 1),
+        (2, 2),
+        (3, 1);
 
         -- Insert into DISPUTE_STATUS table
         INSERT INTO "DISPUTE_STATUS" (status_name, description) VALUES 
