@@ -419,11 +419,45 @@ const initializeCassandraAndES = async () => {
             );
         `);
 
+        // Create tables
+        await cassandraClient.execute(`
+            CREATE TABLE IF NOT EXISTS video_statistics (
+                id UUID PRIMARY KEY,
+                total_videos int,
+                total_views int,
+                video_uploads_per_month list<int>
+            );
+        `);
+
+        await cassandraClient.execute(`
+            CREATE TABLE IF NOT EXISTS video_disputes (
+                video_id UUID PRIMARY KEY,
+                report_count int
+            );
+        `);
+
         // Insert sample data
+        await cassandraClient.execute(`
+            INSERT INTO video_statistics (id, total_videos, total_views, video_uploads_per_month)
+            VALUES (uuid(), 12332, 1231, [10, 30, 40, 50, 40, 20, 10, 38, 89, 34, 23, 45])
+        `);
+
+        // Insert sample data
+        await cassandraClient.execute(`
+            INSERT INTO video_disputes (video_id, report_count)
+            VALUES (d3eb7b89-89b1-4067-967d-625bf438b173, 15)
+        `);
+
+        await cassandraClient.execute(`
+            INSERT INTO video_disputes (video_id, report_count)
+            VALUES (7f12bce6-9abf-4e45-bf7a-bd7356d8db6e, 3)
+        `);
+        
         await cassandraClient.execute(`
           INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
           VALUES (uuid(), 'Video 1', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th2.jpg', {'Java'}, 400)
       `);
+
         await cassandraClient.execute(`
                   INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
                   VALUES (uuid(), 'Video 2', uuid(), 'Test', 150, 5, 100, toTimestamp(now()), 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/th3.jpg', {'Java'}, 400)

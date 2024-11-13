@@ -100,4 +100,45 @@ const updateAppealStatus = async (req, res) => {
     }
 };
 
-module.exports = {createAppealRequest, updateAppealStatus};
+const getAllAppeals = async (req, res) => {
+    try {
+        const { page = 1, pageSize = 10, status_id } = req.query;
+        const offset = (page - 1) * pageSize;
+
+        // Construct the where clause with status_id filter if provided
+        const whereClause = {
+            ...(status_id && { status_id: status_id }),  // Apply filter only if status_id is provided
+        };
+
+        // Query PostgreSQL for the appeal requests with pagination and status_id filter
+        const appealRequests = await AppealRequest.findAll({
+            attributes: ['user_id', 'video_id', 'reason'],
+            where: whereClause,
+            limit: pageSize,
+            offset: offset,
+        });
+
+        // Get the total count for pagination
+        const totalRecords = await AppealRequest.count({ where: whereClause });
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        const hasNext = page < totalPages;
+
+        // Return the data with pagination
+        res.json({
+            message: 'Appeal requests fetched successfully.',
+            data: appealRequests,
+            pagination: {
+                totalRecords,
+                totalPages,
+                currentPage: page,
+                pageSize,
+                hasNext,
+            },
+        });
+    } catch (error) {
+        console.error('Error fetching data from PostgreSQL:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+module.exports = {createAppealRequest, updateAppealStatus, getAllAppeals};
