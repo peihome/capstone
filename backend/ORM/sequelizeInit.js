@@ -27,8 +27,7 @@ const User = sequelize.define('User', {
   name: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, allowNull: false, unique: true },
   status_id: { type: DataTypes.INTEGER, allowNull: false },
-  created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
-  updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+  created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW }
 }, { tableName: 'USER', timestamps: false });
 
 UserStatus.hasMany(User, { foreignKey: 'status_id' });
@@ -196,10 +195,8 @@ const DisputeType = sequelize.define('DisputeType', {
 const Dispute = sequelize.define('Dispute', {
   dispute_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   video_id: {type: DataTypes.INTEGER},
-  reporter_id: {type: DataTypes.INTEGER},
   dispute_type_id: {type: DataTypes.INTEGER},
-  status_id: { type: DataTypes.STRING },
-  reported_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+  status_id: { type: DataTypes.STRING }
 }, { tableName: 'DISPUTE', timestamps: false });
 
 Video.hasMany(Dispute, { foreignKey: 'video_id' });

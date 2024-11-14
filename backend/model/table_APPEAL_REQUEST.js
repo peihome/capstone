@@ -66,7 +66,8 @@ const createAppealRequest = async (req, res) => {
 };
 
 const updateAppealStatus = async (req, res) => {
-    const { appeal_id, status_id } = req.body;
+    const { appeal_id } = req.params;
+    const { status_id } = req.body;
 
     try {
         // Validate if status_id is provided
@@ -78,12 +79,6 @@ const updateAppealStatus = async (req, res) => {
         const appealRequest = await AppealRequest.findByPk(appeal_id);
         if (!appealRequest) {
             return res.status(404).json({ message: 'Appeal request not found.' });
-        }
-
-        // Validate if the provided status_id exists in the AppealStatus table
-        const appealStatus = await AppealStatus.findByPk(status_id);
-        if (!appealStatus) {
-            return res.status(400).json({ message: 'Invalid status_id.' });
         }
 
         // Update the appeal request's status_id
@@ -112,7 +107,7 @@ const getAllAppeals = async (req, res) => {
 
         // Query PostgreSQL for the appeal requests with pagination and status_id filter
         const appealRequests = await AppealRequest.findAll({
-            attributes: ['user_id', 'video_id', 'reason'],
+            attributes: ['user_id', 'appeal_id', 'video_id', 'reason', 'status_id'],
             where: whereClause,
             limit: pageSize,
             offset: offset,

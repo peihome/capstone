@@ -27,7 +27,7 @@ app.use(session({
 }));
 
 //DB Init
-//require('../controller/dbInit.js');
+require('../controller/dbInit.js');
 
 //Start PostGre Server
 require('../controller/postgre.js');

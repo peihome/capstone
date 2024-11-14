@@ -29,7 +29,8 @@ const createDispute = async (req, res) => {
 };
 
 const updateDisputeStatus = async (req, res) => {
-    const { dispute_id, status_id } = req.body;
+    const { dispute_id } = req.params;
+    const { status_id } = req.body;
 
     // Validate status input
     if (!status_id) {
@@ -43,7 +44,6 @@ const updateDisputeStatus = async (req, res) => {
         if (!dispute) {
             return res.status(404).json({ error: 'Dispute not found.' });
         }
-
         // Update the dispute status
         dispute.status_id = status_id;
         await dispute.save();

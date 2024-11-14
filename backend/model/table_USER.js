@@ -91,7 +91,7 @@ const getUserDetails = async (page = 1, pageSize = 10, status_id = null) => {
       const whereClause = status_id ? { status_id } : {};
 
       const users = await User.findAll({
-          attributes: ['status_id', 'email', 'name'],
+          attributes: ['user_id', 'status_id', 'email', 'name'],
           where: whereClause,
           limit: pageSize,
           offset: offset,
@@ -121,7 +121,6 @@ const getUserDetails = async (page = 1, pageSize = 10, status_id = null) => {
   }
 };
 
-
 const getAllUsers = async (req, res) => {
   const { page = 1, pageSize = 10, status_id } = req.query; // Get query parameters
 
@@ -141,4 +140,37 @@ const getAllUsers = async (req, res) => {
     }
 }
 
-module.exports = { confirmUser, createUser, getCurrentUserId, getAllUsers };
+const updateUserStatus = async (req, res) => {
+  const { user_id } = req.params; // Extract user_id from URL params
+  const { status_id } = req.body; // Extract new status_id from request body
+
+  // Validate that status_id is provided
+  if (status_id == null) {
+      return res.status(400).json({ error: 'status_id is required.' });
+  }
+
+  try {
+      // Find the user by primary key (user_id)
+      const user = await User.findByPk(user_id);
+
+      // Check if user exists
+      if (!user) {
+          return res.status(404).json({ error: 'User not found.' });
+      }
+
+      // Update the user's status_id
+      user.status_id = status_id;
+      await user.save();
+
+      // Respond with the updated user data
+      return res.status(200).json({
+          message: 'User status updated successfully.',
+          data: user,
+      });
+  } catch (error) {
+      console.error('Error updating user status:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+module.exports = { confirmUser, createUser, getCurrentUserId, getAllUsers, updateUserStatus };
