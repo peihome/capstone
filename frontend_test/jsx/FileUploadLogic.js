@@ -64,7 +64,8 @@ export async function uploadFileInChunks(file, onProgress) {
     });
 
     //Produce Message to Kafka for ABS transcoding
-    const finalETag = completeResponse.data.ETag; 
+    const finalETag = completeResponse.data.ETag.replace(/^"|"$/g, '');
+
     await axios.post(kafkaSendUrl, { message: finalETag });
     console.log('Final ETag sent to Kafka!');
 

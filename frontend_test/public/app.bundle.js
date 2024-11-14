@@ -20,7 +20,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_KafkaProducer_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], null));
+react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_FileUploadForm_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], null));
 
 /***/ }),
 
@@ -198,7 +198,7 @@ function _uploadFileInChunks() {
         case 26:
           completeResponse = _context.sent;
           //Produce Message to Kafka for ABS transcoding
-          finalETag = completeResponse.data.ETag;
+          finalETag = completeResponse.data.ETag.replace(/^"|"$/g, '');
           _context.next = 30;
           return axios__WEBPACK_IMPORTED_MODULE_0__["default"].post(kafkaSendUrl, {
             message: finalETag
@@ -291,7 +291,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 var backendPort = "8001";
 var websocketPort = "8080";
-var backendUrl = "http://".concat("8001", ":").concat(backendPort);
+var backendUrl = "http://".concat("localhost", ":").concat(backendPort);
 var websocketUrl = "ws://localhost:".concat(websocketPort);
 function KafkaProducer() {
   var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
@@ -419,14 +419,12 @@ var S3VideoPlayer = function S3VideoPlayer() {
         var player = (0,video_js__WEBPACK_IMPORTED_MODULE_1__["default"])(videoRef.current, {
           controls: true,
           autoplay: true,
-          // Auto start video
           sources: [{
             src: videoUrl,
             type: 'application/x-mpegURL'
           }],
           fluid: true,
-          // Make the player fluid
-          techOrder: ['html5'] // Ensure HTML5 tech order
+          techOrder: ['html5']
         });
         playerRef.current = player;
         player.on('error', function (event) {
@@ -449,8 +447,11 @@ var S3VideoPlayer = function S3VideoPlayer() {
     }
     setErrorMessage('');
   };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
-    onSubmit: handleSubmit
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "video-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
+    onSubmit: handleSubmit,
+    className: "video-form"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
     type: "text",
     placeholder: "Enter S3 Video or M3U8 URL",
@@ -464,12 +465,11 @@ var S3VideoPlayer = function S3VideoPlayer() {
     style: {
       color: 'red'
     }
-  }, errorMessage), videoUrl && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("video", {
+  }, errorMessage), videoUrl && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "video-player-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("video", {
     ref: videoRef,
-    className: "video-js vjs-default-skin",
-    width: "640",
-    height: "360",
-    controls: true
+    className: "video-js vjs-default-skin"
   })));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (S3VideoPlayer);

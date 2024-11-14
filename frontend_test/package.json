@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "lint:report": "eslint jsx/* --format node_modules/eslint-html-reporter/reporter.js --output-file eslint-report.html",
     "format:check": "prettier --check jsx/*",
-    "format:fix": "prettier --write jsx/*"
+    "format:fix": "prettier --write jsx/*",
+    "build": "docker rmi -f frontend_test || true && docker build -t frontend_test ."
   },
   "keywords": [],
   "author": "",
