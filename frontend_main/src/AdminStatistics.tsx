@@ -1,39 +1,66 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-	BarChart,
-	Bar,
+	LineChart,
+	Line,
 	XAxis,
 	YAxis,
 	CartesianGrid,
 	Tooltip,
-	Legend,
 	ResponsiveContainer,
 } from "recharts";
+import axios from "axios";
 
-const dummyData = [
-	{ category: "Entertainment", videos: 1200, views: 5000000 },
-	{ category: "Education", videos: 800, views: 3000000 },
-	{ category: "Sports", videos: 600, views: 2500000 },
-	{ category: "Music", videos: 1000, views: 4500000 },
-	{ category: "News", videos: 400, views: 1500000 },
-];
+interface VideoStats {
+	total_videos: number;
+	total_views: number;
+	video_uploads_per_month: number[];
+}
 
 export default function AdminStatistics() {
+	const [stats, setStats] = useState<VideoStats | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchStats = async () => {
+			try {
+				const response = await axios.get<VideoStats>(
+					"https://api.nexstream.live/api/admin/video-stats"
+				);
+				setStats(response.data);
+			} catch (err) {
+				setError("Failed to fetch video statistics");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchStats();
+	}, []);
+
+	if (isLoading) return <div>Loading...</div>;
+	if (error) return <div>Error: {error}</div>;
+	if (!stats) return <div>No data available</div>;
+
+	const chartData = stats.video_uploads_per_month.map((value, index) => ({
+		month: index + 1,
+		uploads: value,
+	}));
+
 	return (
-		<div>
-			<h2 className="text-2xl font-bold mb-4">Admin Statistics</h2>
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+		<div className="space-y-8">
+			<h2 className="text-3xl font-bold">Admin Statistics</h2>
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<Card>
 					<CardHeader>
 						<CardTitle>Total Videos</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<p className="text-4xl font-bold">
-							{dummyData.reduce(
-								(acc, curr) => acc + curr.videos,
-								0
-							)}
+							{stats.total_videos.toLocaleString()}
 						</p>
 					</CardContent>
 				</Card>
@@ -43,47 +70,51 @@ export default function AdminStatistics() {
 					</CardHeader>
 					<CardContent>
 						<p className="text-4xl font-bold">
-							{dummyData
-								.reduce((acc, curr) => acc + curr.views, 0)
-								.toLocaleString()}
+							{stats.total_views.toLocaleString()}
 						</p>
 					</CardContent>
 				</Card>
 			</div>
 			<Card>
 				<CardHeader>
-					<CardTitle>Videos by Category</CardTitle>
+					<CardTitle>Video Uploads Trend</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<ResponsiveContainer width="100%" height={300}>
-						<BarChart data={dummyData}>
+						<LineChart data={chartData}>
 							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis dataKey="category" />
+							<XAxis
+								dataKey="month"
+								label={{
+									value: "Month",
+									position: "insideBottom",
+									offset: -5,
+								}}
+							/>
 							<YAxis
-								yAxisId="left"
-								orientation="left"
+								label={{
+									value: "Uploads",
+									angle: -90,
+									position: "insideLeft",
+								}}
+							/>
+							<Tooltip
+								formatter={(value: number) => [
+									value,
+									"Uploads",
+								]}
+								labelFormatter={(label: number) =>
+									`Month ${label}`
+								}
+							/>
+							<Line
+								type="monotone"
+								dataKey="uploads"
 								stroke="#8884d8"
+								strokeWidth={2}
+								dot={false}
 							/>
-							<YAxis
-								yAxisId="right"
-								orientation="right"
-								stroke="#82ca9d"
-							/>
-							<Tooltip />
-							<Legend />
-							<Bar
-								yAxisId="left"
-								dataKey="videos"
-								fill="#8884d8"
-								name="Videos"
-							/>
-							<Bar
-								yAxisId="right"
-								dataKey="views"
-								fill="#82ca9d"
-								name="Views"
-							/>
-						</BarChart>
+						</LineChart>
 					</ResponsiveContainer>
 				</CardContent>
 			</Card>

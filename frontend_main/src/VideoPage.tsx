@@ -1,9 +1,14 @@
+"use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface VideoDetails {
 	video_id: number;
@@ -25,6 +30,19 @@ interface Video {
 	thumbnail: string;
 }
 
+interface Comment {
+	comment_id: number;
+	user_id: number;
+	content: string;
+	created_at: string;
+}
+
+interface CommentsResponse {
+	comments: Comment[];
+	nextPage: number | null;
+	hasMore: boolean;
+}
+
 interface ApiResponse {
 	videos: Video[];
 	nextPage: number;
@@ -35,7 +53,11 @@ export default function VideoPage() {
 	const { videoId } = useParams<{ videoId: string }>();
 	const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
 	const [recommendedVideos, setRecommendedVideos] = useState<Video[]>([]);
+	const [comments, setComments] = useState<Comment[]>([]);
+	const [commentsPage, setCommentsPage] = useState<number>(0);
+	const [hasMoreComments, setHasMoreComments] = useState<boolean>(true);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isLoadingComments, setIsLoadingComments] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const playerRef = useRef<any>(null);
@@ -65,7 +87,24 @@ export default function VideoPage() {
 			}
 		};
 
-		Promise.all([fetchVideoDetails(), fetchRecommendedVideos()])
+		const fetchComments = async () => {
+			try {
+				const response = await axios.get<CommentsResponse>(
+					`https://api.nexstream.live/comments/${videoId}?page=0`
+				);
+				setComments(response.data.comments);
+				setHasMoreComments(response.data.hasMore);
+				setCommentsPage(0);
+			} catch (err) {
+				console.error("Failed to fetch comments:", err);
+			}
+		};
+
+		Promise.all([
+			fetchVideoDetails(),
+			fetchRecommendedVideos(),
+			fetchComments(),
+		])
 			.then(() => setIsLoading(false))
 			.catch(() => setIsLoading(false));
 	}, [videoId]);
@@ -101,6 +140,29 @@ export default function VideoPage() {
 		}
 	}, [videoDetails]);
 
+	const loadMoreComments = async () => {
+		if (!hasMoreComments || isLoadingComments) return;
+
+		setIsLoadingComments(true);
+		try {
+			const response = await axios.get<CommentsResponse>(
+				`https://api.nexstream.live/comments/${videoId}?page=${
+					commentsPage + 1
+				}`
+			);
+			setComments((prevComments) => [
+				...prevComments,
+				...response.data.comments,
+			]);
+			setHasMoreComments(response.data.hasMore);
+			setCommentsPage((prevPage) => prevPage + 1);
+		} catch (err) {
+			console.error("Failed to fetch more comments:", err);
+		} finally {
+			setIsLoadingComments(false);
+		}
+	};
+
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>{error}</div>;
 	if (!videoDetails) return <div>Video not found</div>;
@@ -119,7 +181,14 @@ export default function VideoPage() {
 						{videoDetails.title}
 					</h1>
 					<div className="flex items-center mb-4">
-						<div className="w-10 h-10 rounded-full bg-gray-300 mr-4"></div>
+						<Avatar className="w-10 h-10 mr-4">
+							<AvatarImage
+								src={`https://api.dicebear.com/6.x/initials/svg?seed=${videoDetails.channel_name}`}
+							/>
+							<AvatarFallback>
+								{videoDetails.channel_name.charAt(0)}
+							</AvatarFallback>
+						</Avatar>
 						<div>
 							<h2 className="font-semibold">
 								{videoDetails.channel_name}
@@ -129,9 +198,69 @@ export default function VideoPage() {
 							</p>
 						</div>
 					</div>
-					<p className="text-gray-700">
+					<p className="text-gray-700 mb-8">
 						{videoDetails.video_description}
 					</p>
+
+					<div className="mt-8">
+						<h3 className="text-xl font-bold mb-4">Comments</h3>
+						<div className="space-y-4">
+							{comments.map((comment) => (
+								<div
+									key={comment.comment_id}
+									className="flex space-x-4"
+								>
+									<Avatar className="w-10 h-10">
+										<AvatarImage
+											src={`https://api.dicebear.com/6.x/initials/svg?seed=${comment.user_id}`}
+										/>
+										<AvatarFallback>
+											U{comment.user_id}
+										</AvatarFallback>
+									</Avatar>
+									<div className="flex-1">
+										<div className="flex items-center space-x-2">
+											<p className="font-semibold">
+												User {comment.user_id}
+											</p>
+											<p className="text-sm text-gray-500">
+												{new Date(
+													comment.created_at
+												).toLocaleDateString()}
+											</p>
+										</div>
+										<p className="mt-1">
+											{comment.content}
+										</p>
+									</div>
+								</div>
+							))}
+						</div>
+						{hasMoreComments && (
+							<Button
+								onClick={loadMoreComments}
+								disabled={isLoadingComments}
+								className="mt-4"
+							>
+								{isLoadingComments
+									? "Loading..."
+									: "Load More Comments"}
+							</Button>
+						)}
+						{isLoadingComments && (
+							<div className="space-y-4 mt-4">
+								{[...Array(3)].map((_, index) => (
+									<div key={index} className="flex space-x-4">
+										<Skeleton className="w-10 h-10 rounded-full" />
+										<div className="flex-1 space-y-2">
+											<Skeleton className="h-4 w-[250px]" />
+											<Skeleton className="h-4 w-[400px]" />
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
 				</div>
 				<div className="lg:w-[30%]">
 					<h3 className="text-xl font-bold mb-4">
