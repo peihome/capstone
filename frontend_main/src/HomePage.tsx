@@ -34,7 +34,16 @@ export default function HomePage() {
 			const response = await axios.get<ApiResponse>(
 				`https://api.nexstream.live/api/dashboard?page=${page}`
 			);
-			setVideos((prevVideos) => [...prevVideos, ...response.data.videos]);
+			if (page === 0) {
+				// If it's the first page, replace the entire videos array
+				setVideos(response.data.videos);
+			} else {
+				// For subsequent pages, append new videos to the existing array
+				setVideos((prevVideos) => [
+					...prevVideos,
+					...response.data.videos,
+				]);
+			}
 			setNextPage(response.data.nextPage);
 			setHasMore(response.data.hasMore);
 		} catch (err) {
@@ -63,7 +72,7 @@ export default function HomePage() {
 					<VideoCard
 						key={video.video_id}
 						video={video}
-						onClick={() => navigate(`/video/1`)}
+						onClick={() => navigate(`/video/${video.video_id}`)}
 					/>
 				))}
 			</div>
@@ -82,13 +91,11 @@ function VideoCard({ video, onClick }: { video: Video; onClick: () => void }) {
 	return (
 		<Card className="overflow-hidden cursor-pointer" onClick={onClick}>
 			<CardContent className="p-0">
-				<div className="aspect-w-16 aspect-h-9">
-					<img
-						src={video.thumbnail}
-						alt={video.title}
-						className="object-cover w-full h-full"
-					/>
-				</div>
+				<img
+					src={video.thumbnail}
+					alt={video.title}
+					className="object-cover w-full"
+				/>
 				<div className="p-4">
 					<h2 className="text-lg font-semibold line-clamp-2 mb-1">
 						{video.title}

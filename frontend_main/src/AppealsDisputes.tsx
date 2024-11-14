@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import {
 	Table,
 	TableBody,
@@ -9,61 +11,128 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
 
 interface Appeal {
-	id: string;
-	userId: string;
-	videoId: string;
+	appeal_id: string;
+	user_id: string;
+	video_id: string | null;
 	reason: string;
-	status: "pending" | "approved" | "rejected";
+	status_id: number;
 }
 
-const dummyAppeals: Appeal[] = [
-	{
-		id: "1",
-		userId: "user1",
-		videoId: "video1",
-		reason: "False copyright claim",
-		status: "pending",
-	},
-	{
-		id: "2",
-		userId: "user2",
-		videoId: "video2",
-		reason: "Incorrect age restriction",
-		status: "pending",
-	},
-	{
-		id: "3",
-		userId: "user3",
-		videoId: "video3",
-		reason: "Wrongful suspension",
-		status: "approved",
-	},
-	// Add more dummy data as needed
-];
+interface PaginationInfo {
+	totalRecords: number;
+	totalPages: number;
+	currentPage: number;
+	pageSize: number;
+	hasNext: boolean;
+}
 
 export default function AppealsDisputes() {
-	const [appeals, setAppeals] = useState<Appeal[]>(dummyAppeals);
+	const [appeals, setAppeals] = useState<Appeal[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
+		totalRecords: 0,
+		totalPages: 1,
+		currentPage: 1,
+		pageSize: 10,
+		hasNext: false,
+	});
 
-	const handleApprove = (id: string) => {
-		setAppeals(
-			appeals.map((appeal) =>
-				appeal.id === id ? { ...appeal, status: "approved" } : appeal
-			)
-		);
+	useEffect(() => {
+		fetchAppeals(paginationInfo.currentPage);
+	}, [paginationInfo.currentPage]);
+
+	const fetchAppeals = async (page: number) => {
+		setIsLoading(true);
+		try {
+			const response = await fetch(
+				`https://api.nexstream.live/api/admin/appeals?page=${page}`
+			);
+			if (!response.ok) {
+				throw new Error("Failed to fetch appeals");
+			}
+			const data = await response.json();
+			setAppeals(data.data);
+			setPaginationInfo(data.pagination);
+		} catch (err) {
+			setError("Failed to load appeals. Please try again later.");
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
-	const handleReject = (id: string) => {
-		setAppeals(
-			appeals.map((appeal) =>
-				appeal.id === id ? { ...appeal, status: "rejected" } : appeal
-			)
-		);
+	const updateAppealStatus = async (appealId: string, statusId: number) => {
+		try {
+			const response = await fetch(
+				`https://api.nexstream.live/api/admin/appeals/${appealId}`,
+				{
+					method: "PUT",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ status_id: statusId }),
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to update appeal status");
+			}
+
+			setAppeals(
+				appeals.map((appeal) =>
+					appeal.appeal_id === appealId
+						? { ...appeal, status_id: statusId }
+						: appeal
+				)
+			);
+		} catch (err) {
+			setError("Failed to update appeal status. Please try again.");
+		}
 	};
+
+	const handleApprove = (id: string) => updateAppealStatus(id, 1);
+	const handleReject = (id: string) => updateAppealStatus(id, -1);
+
+	const handlePageChange = (page: number) => {
+		setPaginationInfo((prev) => ({ ...prev, currentPage: page }));
+	};
+
+	const getStatusString = (statusId: number): string => {
+		switch (statusId) {
+			case 0:
+				return "pending";
+			case 1:
+				return "approved";
+			case -1:
+				return "rejected";
+			default:
+				return "unknown";
+		}
+	};
+
+	const getStatusBadgeVariant = (
+		statusId: number
+	): "outline" | "default" | "destructive" => {
+		switch (statusId) {
+			case 0:
+				return "outline";
+			case 1:
+				return "default";
+			case -1:
+				return "destructive";
+			default:
+				return "outline";
+		}
+	};
+
+	if (isLoading) return <div>Loading appeals...</div>;
+	if (error) return <div className="text-red-500">{error}</div>;
 
 	return (
-		<div>
+		<div className="space-y-4">
 			<h2 className="text-2xl font-bold mb-4">Appeals & Disputes</h2>
 			<Table>
 				<TableHeader>
@@ -77,52 +146,51 @@ export default function AppealsDisputes() {
 				</TableHeader>
 				<TableBody>
 					{appeals.map((appeal) => (
-						<TableRow key={appeal.id}>
-							<TableCell>{appeal.userId}</TableCell>
-							<TableCell>{appeal.videoId}</TableCell>
+						<TableRow key={appeal.appeal_id}>
+							<TableCell>{appeal.user_id}</TableCell>
+							<TableCell>{appeal.video_id || "N/A"}</TableCell>
 							<TableCell>{appeal.reason}</TableCell>
 							<TableCell>
 								<Badge
-									variant={
-										appeal.status === "pending"
-											? "outline"
-											: appeal.status === "approved"
-											? "default"
-											: "destructive"
-									}
+									variant={getStatusBadgeVariant(
+										appeal.status_id
+									)}
 								>
-									{appeal.status}
+									{getStatusString(appeal.status_id)}
 								</Badge>
 							</TableCell>
 							<TableCell>
-								{appeal.status === "pending" && (
-									<>
-										<Button
-											onClick={() =>
-												handleApprove(appeal.id)
-											}
-											variant="outline"
-											size="sm"
-											className="mr-2"
-										>
-											Approve
-										</Button>
-										<Button
-											onClick={() =>
-												handleReject(appeal.id)
-											}
-											variant="destructive"
-											size="sm"
-										>
-											Reject
-										</Button>
-									</>
-								)}
+								<Button
+									onClick={() =>
+										handleApprove(appeal.appeal_id)
+									}
+									variant="outline"
+									size="sm"
+									className="mr-2"
+									disabled={appeal.status_id === 1}
+								>
+									Approve
+								</Button>
+								<Button
+									onClick={() =>
+										handleReject(appeal.appeal_id)
+									}
+									variant="destructive"
+									size="sm"
+									disabled={appeal.status_id === -1}
+								>
+									Reject
+								</Button>
 							</TableCell>
 						</TableRow>
 					))}
 				</TableBody>
 			</Table>
+			<Pagination
+				currentPage={paginationInfo.currentPage}
+				totalPages={paginationInfo.totalPages}
+				onPageChange={handlePageChange}
+			/>
 		</div>
 	);
 }

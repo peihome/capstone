@@ -14,6 +14,7 @@ import AdminDashboard from "./AdminDashboard";
 import About from "./AboutPage";
 import Press from "./PressPage";
 import Contact from "./ContactPage";
+import VideoReviewPage from "./VideoReviewPage";
 
 export default function App() {
 	return (
@@ -42,6 +43,10 @@ export default function App() {
 						<Route path="/about" element={<About />} />
 						<Route path="/press" element={<Press />} />
 						<Route path="/contact" element={<Contact />} />
+						<Route
+							path="/admin/review/:videoId"
+							element={<VideoReviewPage />}
+						/>
 					</Routes>
 				</Container>
 			</Router>
