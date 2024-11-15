@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface VideoDetails {
 	video_id: number;
@@ -51,6 +53,7 @@ interface ApiResponse {
 
 export default function VideoPage() {
 	const { videoId } = useParams<{ videoId: string }>();
+	const navigate = useNavigate();
 	const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
 	const [recommendedVideos, setRecommendedVideos] = useState<Video[]>([]);
 	const [comments, setComments] = useState<Comment[]>([]);
@@ -59,6 +62,7 @@ export default function VideoPage() {
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [isLoadingComments, setIsLoadingComments] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const [reportSuccess, setReportSuccess] = useState<boolean>(false);
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const playerRef = useRef<any>(null);
 
@@ -162,6 +166,20 @@ export default function VideoPage() {
 			setIsLoadingComments(false);
 		}
 	};
+	const handleReportVideo = async () => {
+		try {
+			await axios.post(
+				`https://api.nexstream.live/api/video/report/${videoId}`,
+				{
+					dispute_type_id: 1,
+				}
+			);
+			setReportSuccess(true);
+		} catch (err) {
+			console.error("Failed to report video:", err);
+			setError("Failed to report video. Please try again later.");
+		}
+	};
 
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>{error}</div>;
@@ -197,7 +215,23 @@ export default function VideoPage() {
 								{videoDetails.channel_description}
 							</p>
 						</div>
+						<Button
+							onClick={handleReportVideo}
+							variant="outline"
+							className="ml-40"
+						>
+							Report Video
+						</Button>
 					</div>
+					{reportSuccess && (
+						<Alert className="mb-4">
+							<AlertCircle className="h-4 w-4" />
+							<AlertTitle>Success</AlertTitle>
+							<AlertDescription>
+								The video has been reported successfully.
+							</AlertDescription>
+						</Alert>
+					)}
 					<p className="text-gray-700 mb-8">
 						{videoDetails.video_description}
 					</p>
@@ -281,8 +315,14 @@ export default function VideoPage() {
 }
 
 function RecommendedVideoCard({ video }: { video: Video }) {
+	const navigate = useNavigate();
+
+	const handleClick = () => {
+		navigate(`/video/${video.video_id}`);
+	};
+
 	return (
-		<Card className="overflow-hidden">
+		<Card className="overflow-hidden cursor-pointer" onClick={handleClick}>
 			<CardContent className="p-2 flex">
 				<div className="w-2/5">
 					<img
