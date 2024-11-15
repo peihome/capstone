@@ -74,9 +74,13 @@ export default function VideoPage() {
 				);
 				setVideoDetails(response.data);
 			} catch (err) {
-				setError(
-					"Failed to fetch video details. Please try again later."
-				);
+				if (axios.isAxiosError(err) && err.response?.status === 404) {
+					navigate("/video/unavailable");
+				} else {
+					setError(
+						"Failed to fetch video details. Please try again later."
+					);
+				}
 			}
 		};
 
@@ -111,7 +115,7 @@ export default function VideoPage() {
 		])
 			.then(() => setIsLoading(false))
 			.catch(() => setIsLoading(false));
-	}, [videoId]);
+	}, [videoId, navigate]);
 
 	useEffect(() => {
 		if (videoDetails && videoRef.current) {
@@ -166,6 +170,7 @@ export default function VideoPage() {
 			setIsLoadingComments(false);
 		}
 	};
+
 	const handleReportVideo = async () => {
 		try {
 			await axios.post(
