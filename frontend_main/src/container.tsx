@@ -73,6 +73,15 @@ export function Container({ children }: ContainerProps) {
 			navigate("/create-profile");
 		}
 	};
+	const handleUserUpload = () => {
+		const user = auth.currentUser;
+		if (user && user.displayName) {
+			navigate(`/${user.displayName}/upload`);
+		} else {
+			console.error("Username not found");
+			navigate("/create-profile");
+		}
+	};
 
 	return (
 		<div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -141,6 +150,12 @@ export function Container({ children }: ContainerProps) {
 										>
 											<User className="mr-2 h-4 w-4" />
 											<span>User Profile</span>
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={handleUserUpload}
+										>
+											<User className="mr-2 h-4 w-4" />
+											<span>upload</span>
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											onClick={handleLogout}

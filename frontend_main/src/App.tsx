@@ -39,7 +39,10 @@ export default function App() {
 							element={<UserProfilePage />}
 						/>
 						<Route path="/video/:videoId" element={<VideoPage />} />
-						<Route path="/upload" element={<VideoUploadPage />} />
+						<Route
+							path="/:username/upload"
+							element={<VideoUploadPage />}
+						/>
 						<Route path="/admin" element={<AdminDashboard />} />
 						<Route path="/about" element={<About />} />
 						<Route path="/press" element={<Press />} />

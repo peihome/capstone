@@ -123,7 +123,9 @@ export default function VideoPage() {
 				controls: true,
 				autoplay: false,
 				preload: "auto",
-				fluid: true,
+				responsive: true,
+				fluid: false, // Change this to false
+				aspectRatio: "16:9", // Set the aspect ratio
 				sources: [
 					{
 						src: videoDetails.video_url,
@@ -194,11 +196,18 @@ export default function VideoPage() {
 		<div className="container mx-auto px-4 py-8">
 			<div className="flex flex-col lg:flex-row gap-8">
 				<div className="lg:w-[70%]">
-					<div className="lg:w-[100%] aspect-w-16 aspect-h-9 mb-4">
-						<video
-							ref={videoRef}
-							className="video-js vjs-default-skin vjs-big-play-centered"
-						/>
+					<div
+						className="relative w-full"
+						style={{ paddingTop: "56.25%" }}
+					>
+						{" "}
+						{/* 16:9 aspect ratio */}
+						<div className="absolute top-0 left-0 w-full h-full">
+							<video
+								ref={videoRef}
+								className="video-js vjs-default-skin vjs-big-play-centered w-full h-full"
+							/>
+						</div>
 					</div>
 					<h1 className="text-2xl font-bold mb-2">
 						{videoDetails.title}
