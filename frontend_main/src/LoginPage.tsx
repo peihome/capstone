@@ -19,7 +19,7 @@ import {
 	signInWithPopup,
 	User,
 } from "firebase/auth";
-
+import axios from "axios";
 export default function LoginPage() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -65,13 +65,23 @@ export default function LoginPage() {
 		}
 	};
 
-	const logUserSession = (user: User) => {
-		console.log("User ID:", user.uid);
-		user.getIdToken().then((token) => {
+	const logUserSession = async (user: User) => {
+		try {
+			const token = await user.getIdToken();
+			console.log("User ID:", user.uid);
 			console.log("User Token:", token);
-			// Here you can store the token in localStorage or a secure cookie
-			// localStorage.setItem('userToken', token)
-		});
+
+			// Send token to backend
+			await axios.post("https://api.nexstream.live/api/user/session", {
+				token: token,
+			});
+
+			// Store token in localStorage for future use
+			// localStorage.setItem("userToken", token);
+		} catch (error) {
+			console.error("Error logging user session:", error);
+			setError("Failed to initialize user session");
+		}
 	};
 
 	return (
