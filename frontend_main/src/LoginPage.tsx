@@ -14,7 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { auth, googleProvider, facebookProvider } from "@/firebase/firebase";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+	signInWithEmailAndPassword,
+	signInWithPopup,
+	User,
+} from "firebase/auth";
 
 export default function LoginPage() {
 	const [email, setEmail] = useState("");
@@ -26,7 +30,13 @@ export default function LoginPage() {
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
-			await signInWithEmailAndPassword(auth, email, password);
+			const userCredential = await signInWithEmailAndPassword(
+				auth,
+				email,
+				password
+			);
+			const user = userCredential.user;
+			logUserSession(user);
 			navigate("/home");
 		} catch (error: any) {
 			setError(error.message);
@@ -35,7 +45,9 @@ export default function LoginPage() {
 
 	const handleGoogleLogin = async () => {
 		try {
-			await signInWithPopup(auth, googleProvider);
+			const result = await signInWithPopup(auth, googleProvider);
+			const user = result.user;
+			logUserSession(user);
 			navigate("/home");
 		} catch (error: any) {
 			setError(error.message);
@@ -44,11 +56,22 @@ export default function LoginPage() {
 
 	const handleFacebookLogin = async () => {
 		try {
-			await signInWithPopup(auth, facebookProvider);
+			const result = await signInWithPopup(auth, facebookProvider);
+			const user = result.user;
+			logUserSession(user);
 			navigate("/home");
 		} catch (error: any) {
 			setError(error.message);
 		}
+	};
+
+	const logUserSession = (user: User) => {
+		console.log("User ID:", user.uid);
+		user.getIdToken().then((token) => {
+			console.log("User Token:", token);
+			// Here you can store the token in localStorage or a secure cookie
+			// localStorage.setItem('userToken', token)
+		});
 	};
 
 	return (
