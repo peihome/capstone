@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { db, auth } from "@/firebase/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
+import axios from "axios";
 
 const profilePictures = [
 	"/profile1.jpg",
@@ -23,12 +25,19 @@ export default function ProfileCreationPage() {
 	const [profilePicture, setProfilePicture] = useState(profilePictures[0]);
 	const [username, setUsername] = useState("");
 	const [channelName, setChannelName] = useState("");
+	const [description, setDescription] = useState("");
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");
 	const [mobileNumber, setMobileNumber] = useState("");
 	const [displayFirstName, setDisplayFirstName] = useState(false);
 	const [displayLastName, setDisplayLastName] = useState(false);
 	const [displayMobileNumber, setDisplayMobileNumber] = useState(false);
+	const [storedUserId, setStoredUserId] = useState<string | null>(null);
+
+	useEffect(() => {
+		const userIdFromStorage = localStorage.getItem("user_id");
+		setStoredUserId(userIdFromStorage);
+	}, []);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -41,6 +50,7 @@ export default function ProfileCreationPage() {
 				username,
 				profilePicture,
 				channelName,
+				description,
 				firstName,
 				lastName,
 				mobileNumber,
@@ -57,6 +67,13 @@ export default function ProfileCreationPage() {
 					photoURL: profilePicture,
 				});
 			}
+
+			// Send channel details to the server
+			await axios.post("https://api.nexstream.live/api/channel", {
+				name: username,
+				description: description,
+				user_id: storedUserId,
+			});
 
 			navigate(`/${username}`);
 		} catch (error) {
@@ -108,6 +125,16 @@ export default function ProfileCreationPage() {
 							id="channelName"
 							value={channelName}
 							onChange={(e) => setChannelName(e.target.value)}
+						/>
+					</div>
+					<div>
+						<Label htmlFor="description">Channel Description</Label>
+						<Textarea
+							id="description"
+							value={description}
+							onChange={(e) => setDescription(e.target.value)}
+							rows={4}
+							placeholder="Describe your channel..."
 						/>
 					</div>
 					<div className="flex items-center space-x-4">

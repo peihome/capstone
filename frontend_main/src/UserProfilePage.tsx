@@ -50,7 +50,12 @@ export default function UserProfilePage() {
 				);
 			} else {
 				console.error("User not found");
-				navigate("/");
+				const currentUser = auth.currentUser;
+				if (currentUser) {
+					navigate(`/create-profile/${currentUser.uid}`);
+				} else {
+					navigate("/");
+				}
 			}
 		};
 

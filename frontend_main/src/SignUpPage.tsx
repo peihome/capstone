@@ -14,9 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { auth, googleProvider, facebookProvider } from "@/firebase/firebase";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import {
+	createUserWithEmailAndPassword,
+	signInWithPopup,
+	User,
+} from "firebase/auth";
+import axios from "axios";
 
 export default function SignUpPage() {
+	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +43,7 @@ export default function SignUpPage() {
 				email,
 				password
 			);
-			navigate(`/create-profile/${userCredential.user.uid}`);
+			await createUserProfile(userCredential.user);
 		} catch (error: any) {
 			setError(error.message);
 		}
@@ -46,7 +52,7 @@ export default function SignUpPage() {
 	const handleGoogleSignUp = async () => {
 		try {
 			const result = await signInWithPopup(auth, googleProvider);
-			navigate(`/create-profile/${result.user.uid}`);
+			await createUserProfile(result.user);
 		} catch (error: any) {
 			setError(error.message);
 		}
@@ -55,9 +61,36 @@ export default function SignUpPage() {
 	const handleFacebookSignUp = async () => {
 		try {
 			const result = await signInWithPopup(auth, facebookProvider);
-			navigate(`/create-profile/${result.user.uid}`);
+			await createUserProfile(result.user);
 		} catch (error: any) {
 			setError(error.message);
+		}
+	};
+
+	const createUserProfile = async (user: User) => {
+		try {
+			// Call the /api/user endpoint
+			await axios.post("https://api.nexstream.live/api/user", {
+				name,
+				email: user.email,
+			});
+
+			// Call the /api/user/session endpoint
+			const sessionResponse = await axios.post(
+				"https://api.nexstream.live/api/user/session",
+				{
+					email: user.email,
+				}
+			);
+
+			// Store the user_id in localStorage
+			localStorage.setItem("user_id", sessionResponse.data.user_id);
+
+			// Navigate to the create profile page
+			navigate(`/create-profile/${user.uid}`);
+		} catch (error) {
+			console.error("Error creating user profile:", error);
+			setError("Failed to create user profile. Please try again.");
 		}
 	};
 
@@ -76,6 +109,23 @@ export default function SignUpPage() {
 						</div>
 					)}
 					<form onSubmit={handleSignUp}>
+						<div className="space-y-2">
+							<Label
+								htmlFor="name"
+								className="text-gray-700 dark:text-gray-300"
+							>
+								Name
+							</Label>
+							<Input
+								id="name"
+								type="text"
+								placeholder="Enter your name"
+								required
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+							/>
+						</div>
 						<div className="space-y-2">
 							<Label
 								htmlFor="email"
