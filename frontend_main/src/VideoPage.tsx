@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 
 interface VideoDetails {
 	video_id: number;
@@ -34,6 +35,7 @@ interface Video {
 
 interface Comment {
 	comment_id: number;
+	user_name: string;
 	user_id: number;
 	content: string;
 	created_at: string;
@@ -65,6 +67,13 @@ export default function VideoPage() {
 	const [reportSuccess, setReportSuccess] = useState<boolean>(false);
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const playerRef = useRef<any>(null);
+	const [newComment, setNewComment] = useState("");
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+	useEffect(() => {
+		const userId = localStorage.getItem("user_id");
+		setIsLoggedIn(!!userId);
+	}, []);
 
 	useEffect(() => {
 		const fetchVideoDetails = async () => {
@@ -95,19 +104,6 @@ export default function VideoPage() {
 			}
 		};
 
-		const fetchComments = async () => {
-			try {
-				const response = await axios.get<CommentsResponse>(
-					`https://api.nexstream.live/comments/${videoId}?page=0`
-				);
-				setComments(response.data.comments);
-				setHasMoreComments(response.data.hasMore);
-				setCommentsPage(0);
-			} catch (err) {
-				console.error("Failed to fetch comments:", err);
-			}
-		};
-
 		Promise.all([
 			fetchVideoDetails(),
 			fetchRecommendedVideos(),
@@ -124,8 +120,8 @@ export default function VideoPage() {
 				autoplay: false,
 				preload: "auto",
 				responsive: true,
-				fluid: false, // Change this to false
-				aspectRatio: "16:9", // Set the aspect ratio
+				fluid: false,
+				aspectRatio: "16:9",
 				sources: [
 					{
 						src: videoDetails.video_url,
@@ -150,27 +146,32 @@ export default function VideoPage() {
 		}
 	}, [videoDetails]);
 
-	const loadMoreComments = async () => {
-		if (!hasMoreComments || isLoadingComments) return;
-
+	const fetchComments = async (page = 0) => {
 		setIsLoadingComments(true);
 		try {
 			const response = await axios.get<CommentsResponse>(
-				`https://api.nexstream.live/comments/${videoId}?page=${
-					commentsPage + 1
-				}`
+				`https://api.nexstream.live/comments/${videoId}?page=${page}`
 			);
-			setComments((prevComments) => [
-				...prevComments,
-				...response.data.comments,
-			]);
+			if (page === 0) {
+				setComments(response.data.comments);
+			} else {
+				setComments((prevComments) => [
+					...prevComments,
+					...response.data.comments,
+				]);
+			}
 			setHasMoreComments(response.data.hasMore);
-			setCommentsPage((prevPage) => prevPage + 1);
+			setCommentsPage(page);
 		} catch (err) {
-			console.error("Failed to fetch more comments:", err);
+			console.error("Failed to fetch comments:", err);
 		} finally {
 			setIsLoadingComments(false);
 		}
+	};
+
+	const loadMoreComments = () => {
+		if (!hasMoreComments || isLoadingComments) return;
+		fetchComments(commentsPage + 1);
 	};
 
 	const handleReportVideo = async () => {
@@ -188,6 +189,31 @@ export default function VideoPage() {
 		}
 	};
 
+	const handleCommentSubmit = async () => {
+		if (!isLoggedIn) {
+			navigate("/login");
+			return;
+		}
+
+		try {
+			const userId = localStorage.getItem("user_id");
+			await axios.post(
+				`https://api.nexstream.live/api/comments/${videoId}`,
+				{
+					user_id: userId,
+					content: newComment,
+				}
+			);
+
+			setNewComment("");
+			// Fetch the latest comments after successfully posting a new comment
+			await fetchComments(0);
+		} catch (err) {
+			console.error("Failed to submit comment:", err);
+			setError("Failed to submit comment. Please try again.");
+		}
+	};
+
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>{error}</div>;
 	if (!videoDetails) return <div>Video not found</div>;
@@ -200,8 +226,6 @@ export default function VideoPage() {
 						className="relative w-full"
 						style={{ paddingTop: "56.25%" }}
 					>
-						{" "}
-						{/* 16:9 aspect ratio */}
 						<div className="absolute top-0 left-0 w-full h-full">
 							<video
 								ref={videoRef}
@@ -232,7 +256,7 @@ export default function VideoPage() {
 						<Button
 							onClick={handleReportVideo}
 							variant="outline"
-							className="ml-40"
+							className="ml-auto"
 						>
 							Report Video
 						</Button>
@@ -252,6 +276,27 @@ export default function VideoPage() {
 
 					<div className="mt-8">
 						<h3 className="text-xl font-bold mb-4">Comments</h3>
+						<div className="flex space-x-2 mb-4">
+							<Input
+								placeholder={
+									isLoggedIn
+										? "Add a comment..."
+										: "Login to comment"
+								}
+								value={newComment}
+								onChange={(e) => setNewComment(e.target.value)}
+								onFocus={() =>
+									!isLoggedIn && navigate("/login")
+								}
+								disabled={!isLoggedIn}
+							/>
+							<Button
+								onClick={handleCommentSubmit}
+								disabled={!isLoggedIn || !newComment.trim()}
+							>
+								Post
+							</Button>
+						</div>
 						<div className="space-y-4">
 							{comments.map((comment) => (
 								<div
@@ -269,7 +314,7 @@ export default function VideoPage() {
 									<div className="flex-1">
 										<div className="flex items-center space-x-2">
 											<p className="font-semibold">
-												User {comment.user_id}
+												{comment.user_name}
 											</p>
 											<p className="text-sm text-gray-500">
 												{new Date(

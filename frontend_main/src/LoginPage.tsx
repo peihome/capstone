@@ -20,6 +20,7 @@ import {
 	User,
 } from "firebase/auth";
 import axios from "axios";
+
 export default function LoginPage() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -36,7 +37,7 @@ export default function LoginPage() {
 				password
 			);
 			const user = userCredential.user;
-			logUserSession(user);
+			await logUserSession(user);
 			navigate("/home");
 		} catch (error: any) {
 			setError(error.message);
@@ -47,7 +48,7 @@ export default function LoginPage() {
 		try {
 			const result = await signInWithPopup(auth, googleProvider);
 			const user = result.user;
-			logUserSession(user);
+			await logUserSession(user);
 			navigate("/home");
 		} catch (error: any) {
 			setError(error.message);
@@ -58,7 +59,7 @@ export default function LoginPage() {
 		try {
 			const result = await signInWithPopup(auth, facebookProvider);
 			const user = result.user;
-			logUserSession(user);
+			await logUserSession(user);
 			navigate("/home");
 		} catch (error: any) {
 			setError(error.message);
@@ -71,18 +72,26 @@ export default function LoginPage() {
 			console.log("User ID:", user.uid);
 			console.log("User Token:", token);
 
-			// Send token to backend
-			await axios.post("https://api.nexstream.live/api/user/session", {
-				token: token,
-			});
+			// Send email to backend
+			const response = await axios.post(
+				"https://api.nexstream.live/api/user/session",
+				{
+					email: user.email,
+				}
+			);
 
-			// Store token in localStorage for future use
-			// localStorage.setItem("userToken", token);
+			// Store UUID in localStorage
+			const user_id = response.data.user_id;
+			localStorage.setItem("user_id", user_id);
+
+			console.log("User UUID:", user_id);
 		} catch (error) {
 			console.error("Error logging user session:", error);
 			setError("Failed to initialize user session");
 		}
 	};
+
+	// ... rest of the component remains unchanged
 
 	return (
 		<div className="flex flex-col h-screen justify-center items-center">
