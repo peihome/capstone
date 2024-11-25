@@ -344,9 +344,10 @@ async function initDB() {
         ('d30fa567-5b8e-4f57-bd68-4b1a3d7d9b8e', 0);
 
         -- Inserting into DISPUTE_STATUS table
-        INSERT INTO "DISPUTE_STATUS" (status_name) VALUES
-        ('Pending'),
-        ('Resolved');
+        INSERT INTO "DISPUTE_STATUS" (status_id, status_name) VALUES
+        (-1, 'Rejected'),
+        (0, 'Reported'),
+        (1, 'Approved');
 
         -- Inserting into DISPUTE_TYPE table
         INSERT INTO "DISPUTE_TYPE" (type_name, description) VALUES
@@ -354,9 +355,6 @@ async function initDB() {
         ('Content', 'Inappropriate content');
 
         -- Inserting into DISPUTE table
-        INSERT INTO "DISPUTE" (video_id, dispute_type_id, status_id) VALUES
-        ('9e3b024f-3df6-4b2a-bb0e-d5a36bda74c6', 1, 1),
-        ('d30fa567-5b8e-4f57-bd68-4b1a3d7d9b8e', 2, 2);
 
         -- Inserting into APPEAL_TYPE table
         INSERT INTO "APPEAL_TYPE" (appeal_type_id, type_name) VALUES
@@ -420,9 +418,6 @@ const initializeCassandraAndES = async () => {
                 title TEXT,
                 channel_id UUID,
                 channel_name TEXT,
-                views INT,
-                likes INT,
-                dislikes INT,
                 published_at TIMESTAMP,
                 thumbnail TEXT,
                 tag SET<TEXT>,
@@ -443,7 +438,7 @@ const initializeCassandraAndES = async () => {
         await cassandraClient.execute(`
             CREATE TABLE IF NOT EXISTS video_dispute_count (
                 video_id UUID PRIMARY KEY,
-                report_count int
+                report_count counter
             );
         `);
 
@@ -456,6 +451,16 @@ const initializeCassandraAndES = async () => {
             );
         `);
 
+        await cassandraClient.execute(`
+            CREATE TABLE video_counters (
+                video_id UUID PRIMARY KEY,
+                views COUNTER,
+                likes COUNTER,
+                dislikes COUNTER
+            );
+
+        `);
+
         // Insert sample data
         await cassandraClient.execute(`
             INSERT INTO video_statistics (id, total_videos, total_views, video_uploads_per_month)
@@ -463,15 +468,17 @@ const initializeCassandraAndES = async () => {
         `);
 
         // Insert sample data
+        /*
         await cassandraClient.execute(`
             INSERT INTO video_dispute_count (video_id, report_count)
-            VALUES (d3eb7b89-89b1-4067-967d-625bf438b173, 15)
+            VALUES (d30fa567-5b8e-4f57-bd68-4b1a3d7d9b8e, 15)
         `);
 
         await cassandraClient.execute(`
             INSERT INTO video_dispute_count (video_id, report_count)
             VALUES (7f12bce6-9abf-4e45-bf7a-bd7356d8db6e, 3)
         `);
+        */
 
         await cassandraClient.execute(`
             INSERT INTO video_vs_reporter (video_id, user_id, reported_at)
@@ -489,78 +496,188 @@ const initializeCassandraAndES = async () => {
         //Video metadata
         
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (d30fa567-5b8e-4f57-bd68-4b1a3d7d9b8e, 'About Eating Meat', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/About+Eating+Meat...+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900)
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (d30fa567-5b8e-4f57-bd68-4b1a3d7d9b8e, 'About Eating Meat', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/About+Eating+Meat...+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900)
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (9e3b024f-3df6-4b2a-bb0e-d5a36bda74c6,  'He Built a Robot From Trash!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/He+Built+A+Robot+From+Trash!!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (9e3b024f-3df6-4b2a-bb0e-d5a36bda74c6,  'He Built a Robot From Trash!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/He+Built+A+Robot+From+Trash!!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (b4b503bb-e40f-4dfd-a6b3-bc5c217e04f4,  'He Knows Every Language!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/He+Knows+Every+Language!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (b4b503bb-e40f-4dfd-a6b3-bc5c217e04f4,  'He Knows Every Language!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/He+Knows+Every+Language!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (ae4b8c98-ea34-41f9-b3d0-d4b963d899a6,  'He Wants to Beat Google', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/He+Wants+To+Beat+Google+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (ae4b8c98-ea34-41f9-b3d0-d4b963d899a6,  'He Wants to Beat Google', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/He+Wants+To+Beat+Google+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (5170da8e-2724-4e13-84ae-387c7679ab68,  'How Cheap Is Egypt?', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+Cheap+Is+Egypt_!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (5170da8e-2724-4e13-84ae-387c7679ab68,  'How Cheap Is Egypt?', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+Cheap+Is+Egypt_!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (aa3c49f4-ef5e-43a7-8a5e-e43a1c5e4a5c,  'How Expensive Is Apple?', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+Expensive+Is+Apple_+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (aa3c49f4-ef5e-43a7-8a5e-e43a1c5e4a5c,  'How Expensive Is Apple?', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+Expensive+Is+Apple_+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (509e0f67-d9c7-4d7b-9a5e-d7c9bc750d9b,  'How I Learned to Swim', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+I+Learned+To+Swim+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (509e0f67-d9c7-4d7b-9a5e-d7c9bc750d9b,  'How I Learned to Swim', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+I+Learned+To+Swim+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (602fb2b8-fbd9-42cc-b80c-b1d20798a2b1,  'How Singapore Drives', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+Singapore+Drives+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (602fb2b8-fbd9-42cc-b80c-b1d20798a2b1,  'How Singapore Drives', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/How+Singapore+Drives+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (4ec80e66-90cf-4c63-8b1d-d4e1cb4de431,  'She Can Build a House From Glass', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/She+Can+Build+A+House+From+Glass+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (4ec80e66-90cf-4c63-8b1d-d4e1cb4de431,  'She Can Build a House From Glass', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/She+Can+Build+A+House+From+Glass+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (9f036a5f-d7ab-4d4f-8772-937d9f93b458,  'The Coolest Museum That You''ve Never Seen', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Coolest+Museum+That+You''ve+Never+Seen.+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (9f036a5f-d7ab-4d4f-8772-937d9f93b458,  'The Coolest Museum That You''ve Never Seen', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Coolest+Museum+That+You''ve+Never+Seen.+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (d6e6e5f5-c313-4a68-8fa5-4bfa5fda128b,  'The Country of Olives', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Country+Of+Olives+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (d6e6e5f5-c313-4a68-8fa5-4bfa5fda128b,  'The Country of Olives', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Country+Of+Olives+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (120fa7b4-31ae-4644-b568-6cc6d432826b,  'The Country of Potatoes!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Country+Of+Potatoes!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (120fa7b4-31ae-4644-b568-6cc6d432826b,  'The Country of Potatoes!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Country+Of+Potatoes!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (d99ab256-14ba-4b63-857d-2e8cb2f31ef6,  'The Country With No Army!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Country+With+No+Army!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (d99ab256-14ba-4b63-857d-2e8cb2f31ef6,  'The Country With No Army!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Country+With+No+Army!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (7a2f3b59-ef02-4f5c-bd99-16f69e3fbc4a,  'The Ocean Disappeared!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Ocean+Disappeared!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (7a2f3b59-ef02-4f5c-bd99-16f69e3fbc4a,  'The Ocean Disappeared!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Ocean+Disappeared!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (315d7997-2b5c-4d43-9f61-91f3f4d74dfb,  'The Visa-Free Country', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Visa-Free+Country+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (315d7997-2b5c-4d43-9f61-91f3f4d74dfb,  'The Visa-Free Country', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/The+Visa-Free+Country+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (3c7e0742-6cd9-4fd4-b440-7ac859a3f607,  'Where Eggs Don''t Fall!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/Where+Eggs+Don''t+Fall!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (3c7e0742-6cd9-4fd4-b440-7ac859a3f607,  'Where Eggs Don''t Fall!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/Where+Eggs+Don''t+Fall!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (a6d12562-00fc-4d0b-b603-1b47ad1f63a3,  'Why Canadians Are the Best', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/Why+Canadians+Are+The+Best+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (a6d12562-00fc-4d0b-b603-1b47ad1f63a3,  'Why Canadians Are the Best', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/Why+Canadians+Are+The+Best+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
         `);
         await cassandraClient.execute(`
-            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, views, likes, dislikes, published_at, thumbnail, tag, rating)
-            VALUES (c3e62f56-1017-46c9-a2a2-d3e26bcde923,  'World''s Best Metro!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', 150000, 1200, 50, '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/World''s+Best+Metro!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
-        `);       
+            INSERT INTO video_metadata_by_id (video_id, title, channel_id, channel_name, published_at, thumbnail, tag, rating)
+            VALUES (c3e62f56-1017-46c9-a2a2-d3e26bcde923,  'World''s Best Metro!', b3e2f383-bbdf-41b1-baba-d77282654e1d, 'Nas Daily', '2024-10-10', 'https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/thumbnails/World''s+Best+Metro!+-+Nas+Daily+(1080p%2C+h264)_thumbnail.jpg', {'food', 'meat', 'culture'}, 900);
+        `);            
         
+
+        //Views, likes, dislikes
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = d30fa567-5b8e-4f57-bd68-4b1a3d7d9b8e
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 9e3b024f-3df6-4b2a-bb0e-d5a36bda74c6
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = b4b503bb-e40f-4dfd-a6b3-bc5c217e04f4
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = ae4b8c98-ea34-41f9-b3d0-d4b963d899a6
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 5170da8e-2724-4e13-84ae-387c7679ab68
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = aa3c49f4-ef5e-43a7-8a5e-e43a1c5e4a5c
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 509e0f67-d9c7-4d7b-9a5e-d7c9bc750d9b
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 602fb2b8-fbd9-42cc-b80c-b1d20798a2b1
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 4ec80e66-90cf-4c63-8b1d-d4e1cb4de431
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 9f036a5f-d7ab-4d4f-8772-937d9f93b458
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = d6e6e5f5-c313-4a68-8fa5-4bfa5fda128b
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 120fa7b4-31ae-4644-b568-6cc6d432826b
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = d99ab256-14ba-4b63-857d-2e8cb2f31ef6
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 7a2f3b59-ef02-4f5c-bd99-16f69e3fbc4a
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 315d7997-2b5c-4d43-9f61-91f3f4d74dfb
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = 3c7e0742-6cd9-4fd4-b440-7ac859a3f607
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = a6d12562-00fc-4d0b-b603-1b47ad1f63a3
+        `);
+
+        await cassandraClient.execute(`
+            UPDATE video_counters 
+            SET views = views + 150000, likes = likes + 1200, dislikes = dislikes + 50 
+            WHERE video_id = c3e62f56-1017-46c9-a2a2-d3e26bcde923
+        `);
+
         
         
 

@@ -34,7 +34,16 @@ consumer.on('message', async (message) => {
   console.log('Received Kafka message:', message.value);
   
   try {
-    await transcodeVideo(message.value); // Perform transcoding
+    const messageData = JSON.parse(message.value);
+    const { finalETag, title, description, user_id } = messageData;
+    console.log('Message Data:', {
+      finalETag,
+      title,
+      description,
+      user_id
+    });
+
+    await transcodeVideo(finalETag, title, description, user_id);
     console.log('Transcoding Completed for ' + message.value);
   } catch (err) {
     console.log('Transcoding Failed for ' + message.value);

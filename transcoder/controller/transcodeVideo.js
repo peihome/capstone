@@ -3,9 +3,27 @@ const { downloadFileFromS3, uploadFileToS3 } = require('./s3Utils');
 const { createDirectoryIfNotExists, cleanupLocalFiles } = require('./fileUtils');
 const { downscaleVideo, transcodeAndUploadSegments, createMasterPlaylist } = require('./transcoding');
 const s3 = require('./s3Client');
+const backendHOST = `http://localhost:${process.env.backend_PORT}`;
+const axios = require('axios');
 
-async function transcodeVideo(etag) {
+async function transcodeVideo(etag, title, description, user_id) {
+    let video_id = null;
+
     try {
+        const videoData = {
+            title,
+            description,
+            user_id,
+            etag
+        };
+        const createVideoResponse = await axios.post(`${backendHOST}/api/video`, videoData);
+        video_id = createVideoResponse.data.video.video_id;
+        if (!video_id) {
+            console.error('Video creation failed: No video ID returned');
+            return;
+        }
+
+
         const objects = await s3.listObjectsV2({ Bucket: process.env.s3BucketName }).promise();
         const s3Object = objects.Contents.find(obj => obj.ETag.replace(/^"|"$/g, '') === etag);
 
@@ -53,8 +71,30 @@ async function transcodeVideo(etag) {
         // Cleanup local files
         const cleanupPaths = [localFilePath, ...downscaledFiles, masterPlaylistPath, ...resolutions.map(resolution => path.join(path.dirname(localFilePath), `${path.basename(fileKey.replace(/ /g, '_'), path.extname(fileKey.replace(/ /g, '_')))}_${resolution}`))];
         await cleanupLocalFiles(cleanupPaths);
+
+
+
+
+        const videoUrl = `https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/${fileKey.replace(/ /g, '_')}/master.m3u8`;
+        // Send the video transcoding completion status
+        await axios.post(`${backendHOST}/api/videos/${video_id}/transcoding/complete`, {
+            video_id,
+            video_url: videoUrl
+        });
+
     } catch (error) {
         console.error('Error during transcoding:', error);
+
+        if (video_id) {
+            try {
+                console.log(`Deleting video entry for ID: ${video_id} due to error.`);
+                await axios.delete(`${backendHOST}/api/video/${video_id}`);
+                console.log(`Video entry with ID: ${video_id} deleted successfully.`);
+            } catch (deleteError) {
+                console.error(`Failed to delete video entry for ID: ${video_id}:`, deleteError.message);
+            }
+        }
+
         throw error;
     }
 }

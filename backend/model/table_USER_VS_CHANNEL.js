@@ -1,9 +1,9 @@
 const { UserVsChannel } = require('../ORM/sequelizeInit.js');
-const { getCurrentUserId } = require('./table_USER.js');
+const { getCurrentUserId } = require('../controller/session.js');
 
 // Method to add the user to a channel
-const addUserToChannel = async (channel_id) => {
-    const user_id = getCurrentUserId(); // Get the current user ID
+const addUserToChannel = async (req, channel_id) => {
+    const user_id = getCurrentUserId(req);
 
     try {
         // Validate if the required fields are provided

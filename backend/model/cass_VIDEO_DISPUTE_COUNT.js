@@ -1,6 +1,7 @@
 
 const { client: cassandraClient } = require('../controller/cassandra.js');
 const { Video, Dispute } = require('../ORM/sequelizeInit.js');
+const { getCurrentUserId } = require('../model/table_USER.js');
 
 const getVideoDisputes = async (req, res) => {
     try {
@@ -8,11 +9,16 @@ const getVideoDisputes = async (req, res) => {
         const offset = (page - 1) * pageSize;
 
         // Query Cassandra for video disputes with report_count >= 5
-        const cassandraQuery = 'SELECT video_id, report_count FROM video_dispute_count WHERE report_count >= 5 ALLOW FILTERING';
+        const cassandraQuery = 'SELECT video_id, report_count FROM video_dispute_count';
         const cassandraResult = await cassandraClient.execute(cassandraQuery);
 
         // Extract video_ids from Cassandra result
-        const videoIds = cassandraResult.rows.map(row => row.video_id);
+        const videoIds = cassandraResult.rows.filter(row => {
+            const reportCount = parseInt(row.report_count, 10);
+            return reportCount > 5;
+        }).map(row => row.video_id);
+
+        console.log("videoIds" + videoIds);
 
         // Construct the where clause for filtering by video_id and status_id (if provided)
         const whereClause = {
@@ -39,6 +45,7 @@ const getVideoDisputes = async (req, res) => {
                 model: Video,
             }],
         });
+        
         const totalPages = Math.ceil(totalRecords / pageSize);
         const hasNext = page < totalPages;
 
@@ -74,4 +81,78 @@ const getVideoDisputes = async (req, res) => {
     }
 };
 
-module.exports = { getVideoDisputes };
+const updateReportCount = async (req, res) => {
+    const videoId = req.params.video_id;
+
+    try {
+
+        const getQuery = `
+            SELECT report_count
+            FROM video_dispute_count
+            WHERE video_id = ?;
+        `;
+        const result = await cassandraClient.execute(getQuery, [videoId], { prepare: true });
+
+        // Extract report_count from the query result
+        const reportCount = result.rows[0]?.report_count || 0;
+
+
+        if(reportCount == 0){
+            createVideoDispute(videoId);
+        }
+
+        // Log the report count to the console
+        console.log(`Report count for video_id ${videoId}:`, reportCount);
+
+
+        // Update query to increment the report_count for the specified video_id
+        const updateQuery = `
+            UPDATE video_dispute_count
+            SET report_count = report_count + 1
+            WHERE video_id = ?;
+        `;
+        
+        // Execute the update query
+        await cassandraClient.execute(updateQuery, [videoId], { prepare: true });
+
+        // Log the successful increment operation
+        console.log(`Incremented report_count for video_id ${videoId}`);
+
+        // Send a success response
+        res.status(200).json({ message: `Report count incremented for video_id ${videoId}` });
+    } catch (error) {
+        console.error("Error incrementing report_count:", error.message || error);
+        res.status(500).send("Error incrementing report count");
+    }
+}
+
+
+const createVideoDispute = async (video_id) => {
+    const dispute_type_id = 1;
+    const reporter_id = getCurrentUserId(); // Assuming you have a method to get the current user's ID
+
+    // Validate input data
+    if (!video_id || !dispute_type_id) {
+        return { error: 'video_id and dispute_type_id are required.' }; // Return the error instead of using res
+    }
+
+    try {
+        // Create a new dispute
+        const newDispute = await Dispute.create({
+            video_id,
+            reporter_id,
+            dispute_type_id,
+            status_id: 0,
+        });
+
+        return {
+            message: 'Dispute created successfully.',
+            data: newDispute,
+        };
+    } catch (error) {
+        console.error('Error creating dispute:', error);
+        return { error: 'Internal server error' }; // Return the error instead of using res
+    }
+};
+
+module.exports = { getVideoDisputes , updateReportCount};

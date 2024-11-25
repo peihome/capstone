@@ -1,38 +1,42 @@
 const { client: pgClient } = require('../controller/postgre.js');
-const { getCurrentUserId } = require('./table_USER.js');
+const { getCurrentUserId } = require('../controller/session.js');
 const { Channel } = require('../ORM/sequelizeInit.js');
 const { addUserToChannel } = require('../model/table_USER_VS_CHANNEL.js');
 
 const createChannel = async (req, res) => {
     const { name, description } = req.body;
-    user_id = getCurrentUserId();
+    const user_id = getCurrentUserId(req);
 
     // Basic validation
     if (!name || !description) {
         return res.status(400).json({ error: 'Name and description are required fields.' });
     }
 
-    //Validate if the user already has a row in Channel table
-    TODO
-
     try {
-        const query = `
-        INSERT INTO "CHANNEL" (name, description, user_id, status_id)
-        VALUES ($1, $2, $3, $4) RETURNING channel_id, name, description, user_id, status_id, created_at;
-        `;
-        const values = [name, description, user_id, 1]; // 1 for Active
+        // Check if the user already has a channel
+        const existingChannel = await Channel.findOne({ where: { user_id } });
 
-        const result = await pgClient.query(query, values);
-        const newChannel = result.rows[0];
+        if (existingChannel) {
+            return res.status(400).json({ error: 'User already has a channel.' });
+        }
 
-        await addUserToChannel(newChannel.channel_id);
+        // Create the channel for the user
+        const newChannel = await Channel.create({
+            name,
+            description,
+            user_id,
+            status_id: 1, // 1 for Active status
+        });
+
+        // Optionally, you can implement `addUserToChannel` if you need to associate users with the channel.
+        await addUserToChannel(req, newChannel.channel_id);
 
         res.status(201).json({ message: 'Channel created successfully', channel: newChannel });
     } catch (error) {
         console.error('Error creating channel:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
 
 const updateChannelStatus = async (channel_id, user_id, status_id) => {
     if (!channel_id || !user_id || !status_id) {

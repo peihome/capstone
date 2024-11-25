@@ -29,8 +29,8 @@ const createUser = async (req, res) => {
   
       // If email doesn't exist in Elasticsearch, proceed with inserting into PostgreSQL
       const query = `
-        INSERT INTO "USER" (name, email, status)
-        VALUES ($1, $2, 0)
+        INSERT INTO "USER" (name, email, status_id)
+        VALUES ($1, $2, 1)
         RETURNING *;
       `;
       const values = [name, email];
@@ -81,7 +81,7 @@ const confirmUser = async (req, res) => {
 };
 
 const getCurrentUserId = () => {
-  return 1;
+  return 'a3d9b643-17ab-4bfe-96b9-b3cddac1ee7f';
 }
 
 const getUserDetails = async (page = 1, pageSize = 10, status_id = null) => {

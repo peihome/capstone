@@ -5,9 +5,11 @@ const sendMessage = (message, callback) => {
     return callback(new Error('Message is required'));
   }
 
-  console.log(`Sending message: ${message} to topic: ${topic}`);
+  const stringifiedMessage = JSON.stringify(message);
 
-  const payloads = [{ topic, messages: message }];
+  console.log(`Sending message: ${stringifiedMessage} to topic: ${topic}`);
+
+  const payloads = [{ topic, messages: stringifiedMessage }];
   producer.send(payloads, (err, data) => {
     if (err) {
       console.error('Failed to send message:', err);

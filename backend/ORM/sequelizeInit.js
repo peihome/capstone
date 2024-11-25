@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes , Op} = require('sequelize');
 
 // Connect to PostgreSQL database
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
@@ -83,6 +83,7 @@ const Video = sequelize.define('Video', {
   bucket_name: { type: DataTypes.STRING, allowNull: false },
   transcoding_status: { type: DataTypes.STRING },
   video_url: { type: DataTypes.TEXT },
+  thumbnail_url: { type: DataTypes.TEXT },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'VIDEO', timestamps: false });
 
@@ -299,5 +300,6 @@ module.exports = {
     AppealRequest,
     AppealStatus,
     VideoReviewStatus,
-    VideoVsReview
+    VideoVsReview,
+    Op
 }
