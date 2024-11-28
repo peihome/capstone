@@ -1,0 +1,22 @@
+{
+  "name": "suryaprakashnagarajan_assignment1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server/main.js",
+  "scripts": {
+    "start#": "npm install && node server/main.js",
+    "start": "npm install && nodemon server/main.js",
+    "build": "docker rmi -f watch_together || true && docker build -t watch_together ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "nodemon": "^3.1.7",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.3"
+  }
+}

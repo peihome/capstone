@@ -15,12 +15,28 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _FileUploadForm_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./FileUploadForm.jsx */ "./jsx/FileUploadForm.jsx");
 /* harmony import */ var _S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./S3VideoPlayer.jsx */ "./jsx/S3VideoPlayer.jsx");
 /* harmony import */ var _KafkaProducer_jsx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./KafkaProducer.jsx */ "./jsx/KafkaProducer.jsx");
+/* harmony import */ var _WatchTogether_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./WatchTogether.jsx */ "./jsx/WatchTogether.jsx");
+/* harmony import */ var _WatchRoom_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./WatchRoom.jsx */ "./jsx/WatchRoom.jsx");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/dist/index.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
 
 
 
 
 
-react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById('contents')).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_FileUploadForm_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], null));
+
+
+
+function App() {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_7__.HashRouter, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.Route, {
+    path: "/",
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_WatchTogether_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], null)
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.Route, {
+    path: "/room/:roomId",
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_WatchRoom_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], null)
+  })));
+}
+react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById("contents")).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(App, null));
 
 /***/ }),
 
@@ -131,7 +147,7 @@ function uploadFileInChunks(_x, _x2) {
 }
 function _uploadFileInChunks() {
   _uploadFileInChunks = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(file, onProgress) {
-    var chunkSize, totalChunks, uploadPromises, uploadId, response, chunkIndex, start, end, chunk, formData, uploadPromise, responses, parts, completeResponse, finalETag;
+    var chunkSize, totalChunks, uploadPromises, uploadId, response, chunkIndex, start, end, chunk, formData, uploadPromise, responses, parts, completeResponse, finalETag, title, description, user_id, messageData;
     return _regeneratorRuntime().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
@@ -199,23 +215,32 @@ function _uploadFileInChunks() {
           completeResponse = _context.sent;
           //Produce Message to Kafka for ABS transcoding
           finalETag = completeResponse.data.ETag.replace(/^"|"$/g, '');
-          _context.next = 30;
+          title = "Sample Title";
+          description = "Sample";
+          user_id = localStorage.getItem('user_id');
+          messageData = {
+            finalETag: finalETag,
+            title: title,
+            description: description,
+            user_id: user_id
+          };
+          _context.next = 34;
           return axios__WEBPACK_IMPORTED_MODULE_0__["default"].post(kafkaSendUrl, {
-            message: finalETag
+            message: messageData
           });
-        case 30:
+        case 34:
           console.log('Final ETag sent to Kafka!');
-          _context.next = 36;
+          _context.next = 40;
           break;
-        case 33:
-          _context.prev = 33;
+        case 37:
+          _context.prev = 37;
           _context.t1 = _context["catch"](16);
           console.error('Failed to upload one or more chunks or complete the upload:', _context.t1);
-        case 36:
+        case 40:
         case "end":
           return _context.stop();
       }
-    }, _callee, null, [[3, 11], [16, 33]]);
+    }, _callee, null, [[3, 11], [16, 37]]);
   }));
   return _uploadFileInChunks.apply(this, arguments);
 }
@@ -476,6 +501,181 @@ var S3VideoPlayer = function S3VideoPlayer() {
 
 /***/ }),
 
+/***/ "./jsx/WatchRoom.jsx":
+/*!***************************!*\
+  !*** ./jsx/WatchRoom.jsx ***!
+  \***************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
+/* harmony import */ var socket_io_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/build/esm/index.js");
+/* harmony import */ var _S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./S3VideoPlayer.jsx */ "./jsx/S3VideoPlayer.jsx");
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+
+
+
+
+var socket = (0,socket_io_client__WEBPACK_IMPORTED_MODULE_1__.io)("http://localhost:7186", {
+  withCredentials: true
+});
+function WatchRoom() {
+  var _useParams = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_3__.useParams)(),
+    roomId = _useParams.roomId;
+  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null),
+    _useState2 = _slicedToArray(_useState, 2),
+    username = _useState2[0],
+    setUsername = _useState2[1];
+  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
+    _useState4 = _slicedToArray(_useState3, 2),
+    message = _useState4[0],
+    setMessage = _useState4[1];
+  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
+    _useState6 = _slicedToArray(_useState5, 2),
+    messages = _useState6[0],
+    setMessages = _useState6[1];
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    // Get username if not set
+    if (!username) {
+      var user = prompt("Enter your username:");
+      setUsername(user);
+    }
+
+    // Join the room
+    socket.emit("join-room", {
+      roomId: roomId,
+      username: username
+    });
+
+    // Listen for messages
+    socket.on("receive-message", function (_ref) {
+      var username = _ref.username,
+        message = _ref.message;
+      setMessages(function (prevMessages) {
+        return [].concat(_toConsumableArray(prevMessages), [{
+          username: username,
+          message: message
+        }]);
+      });
+    });
+
+    // Listen for user joining
+    socket.on("user-joined", function (username) {
+      setMessages(function (prevMessages) {
+        return [].concat(_toConsumableArray(prevMessages), [{
+          username: "System",
+          message: "".concat(username, " has joined the room")
+        }]);
+      });
+    });
+
+    // Cleanup when the component unmounts
+    return function () {
+      socket.off("receive-message");
+      socket.off("user-joined");
+    };
+  }, [roomId, username]);
+
+  // Handle sending a message
+  var handleSendMessage = function handleSendMessage() {
+    if (message.trim() !== "") {
+      socket.emit("send-message", {
+        roomId: roomId,
+        message: message,
+        username: username
+      });
+      setMessages(function (prevMessages) {
+        return [].concat(_toConsumableArray(prevMessages), [{
+          username: username,
+          message: message
+        }]);
+      });
+      setMessage(""); // Clear input after sending
+    }
+  };
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "Room ", roomId), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, "Chat:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    style: {
+      maxHeight: '300px',
+      overflowY: 'scroll',
+      border: '1px solid #ccc'
+    }
+  }, messages.map(function (msg, index) {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+      key: index
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("strong", null, msg.username, ":"), " ", msg.message);
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "text",
+    value: message,
+    onChange: function onChange(e) {
+      return setMessage(e.target.value);
+    },
+    placeholder: "Type a message"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: handleSendMessage
+  }, "Send"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, "Watch Video Together"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], null)));
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WatchRoom);
+
+/***/ }),
+
+/***/ "./jsx/WatchTogether.jsx":
+/*!*******************************!*\
+  !*** ./jsx/WatchTogether.jsx ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/v4.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/dist/index.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+
+ // Generate UUID
+
+function WatchTogether() {
+  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null),
+    _useState2 = _slicedToArray(_useState, 2),
+    roomId = _useState2[0],
+    setRoomId = _useState2[1];
+  var createRoom = function createRoom() {
+    var newRoomId = (0,uuid__WEBPACK_IMPORTED_MODULE_1__["default"])();
+    setRoomId(newRoomId);
+  };
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "Watch Together"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: createRoom
+  }, "Create Room"), roomId && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, "Your room ID is: ", roomId), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_2__.Link, {
+    to: "/room/".concat(roomId)
+  }, "Join the room")));
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WatchTogether);
+
+/***/ }),
+
 /***/ "?34aa":
 /*!******************************!*\
   !*** min-document (ignored) ***!
@@ -560,6 +760,36 @@ var S3VideoPlayer = function S3VideoPlayer() {
 /******/ 				() => (module);
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 		var leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/******/ 				if((mode & 4) && value.__esModule) return value;
+/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 			}
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			var def = {};
+/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 			for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 			}
+/******/ 			def['default'] = () => (value);
+/******/ 			__webpack_require__.d(ns, def);
+/******/ 			return ns;
 /******/ 		};
 /******/ 	})();
 /******/ 	

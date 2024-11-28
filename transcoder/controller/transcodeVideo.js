@@ -6,6 +6,8 @@ const s3 = require('./s3Client');
 const backendHOST = `http://localhost:${process.env.backend_PORT}`;
 const axios = require('axios');
 
+const { exec } = require('child_process');
+
 async function transcodeVideo(etag, title, description, user_id) {
     let video_id = null;
 
@@ -37,8 +39,19 @@ async function transcodeVideo(etag, title, description, user_id) {
         createDirectoryIfNotExists(path.dirname(localFilePath));
         await downloadFileFromS3(fileKey, localFilePath);
 
+        // Extract a thumbnail from the first segment of the video
+        const thumbnailName = `${path.basename(fileKey.replace(/ /g, '_'), path.extname(fileKey))}.jpg`;
+        const thumbnailPath = path.join(path.dirname(localFilePath), thumbnailName);
+        await extractThumbnail(localFilePath, thumbnailPath);
+
+        // Upload the thumbnail to the same folder as master.m3u8
+        const thumbnailKey = `${fileKey.replace(/ /g, '_')}/${thumbnailName}`;
+        await uploadFileToS3(thumbnailPath, thumbnailKey);
+
+        const thumbnailUrl = `https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/${thumbnailKey}`;
+
         const resolutions = process.env.video_resolutions.split(',');
-        const resolutionSizes = JSON.parse(''+process.env.video_resolution_sizes);
+        const resolutionSizes = JSON.parse('' + process.env.video_resolution_sizes);
 
         const downscaledFiles = await Promise.all(
             resolutions.map(resolution => downscaleVideo(localFilePath, resolution, resolutionSizes))
@@ -69,17 +82,16 @@ async function transcodeVideo(etag, title, description, user_id) {
         }).promise();
 
         // Cleanup local files
-        const cleanupPaths = [localFilePath, ...downscaledFiles, masterPlaylistPath, ...resolutions.map(resolution => path.join(path.dirname(localFilePath), `${path.basename(fileKey.replace(/ /g, '_'), path.extname(fileKey.replace(/ /g, '_')))}_${resolution}`))];
+        const cleanupPaths = [localFilePath, thumbnailPath, ...downscaledFiles, masterPlaylistPath, ...resolutions.map(resolution => path.join(path.dirname(localFilePath), `${path.basename(fileKey.replace(/ /g, '_'), path.extname(fileKey.replace(/ /g, '_')))}_${resolution}`))];
         await cleanupLocalFiles(cleanupPaths);
 
-
-
-
         const videoUrl = `https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/${fileKey.replace(/ /g, '_')}/master.m3u8`;
+
         // Send the video transcoding completion status
         await axios.post(`${backendHOST}/api/videos/${video_id}/transcoding/complete`, {
             video_id,
-            video_url: videoUrl
+            video_url: videoUrl,
+            thumbnail_url: thumbnailUrl
         });
 
     } catch (error) {
@@ -97,6 +109,19 @@ async function transcodeVideo(etag, title, description, user_id) {
 
         throw error;
     }
+}
+
+function extractThumbnail(videoPath, thumbnailPath) {
+    return new Promise((resolve, reject) => {
+        const command = `ffmpeg -i "${videoPath}" -ss 00:00:01 -vframes 1 "${thumbnailPath}"`;
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error('Error extracting thumbnail:', stderr);
+                return reject(error);
+            }
+            resolve();
+        });
+    });
 }
 
 module.exports = { transcodeVideo };

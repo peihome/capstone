@@ -44,7 +44,7 @@ const createVideo = async (req, res) => {
 
 const transcodingComplete = async (req, res) => {
   const { video_id } = req.params;
-  const { video_url } = req.body;
+  const { video_url, thumbnail_url } = req.body;
 
   // Validate input
   if (!video_id || !video_url) {
@@ -62,6 +62,9 @@ const transcodingComplete = async (req, res) => {
       // Update the transcoding_status and video_url
       video.transcoding_status = 'completed';
       video.video_url = video_url;
+      if(thumbnail_url){
+        video.thumbnail_url = thumbnail_url;
+      }
 
       // Save the updated video object
       await video.save();
