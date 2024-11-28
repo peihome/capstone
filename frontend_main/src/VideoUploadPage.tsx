@@ -131,7 +131,19 @@ export default function VideoUploadPage() {
 			});
 
 			const finalETag = completeResponse.data.ETag.replace(/^"|"$/g, "");
-			await axios.post(kafkaSendUrl, { message: finalETag });
+
+			const title = form.getValues("title");
+			const description = form.getValues("description");
+			const user_id = localStorage.getItem("user_id");
+
+			const messageData = {
+				finalETag,
+				title,
+				description,
+				user_id,
+			};
+
+			await axios.post(kafkaSendUrl, { message: messageData });
 			console.log("Final ETag sent to Kafka!");
 
 			return finalETag;

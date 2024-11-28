@@ -58,6 +58,7 @@ export function Container({ children }: ContainerProps) {
 	const handleLogout = async () => {
 		try {
 			await signOut(auth);
+			localStorage.removeItem("user_id");
 			navigate("/");
 		} catch (error) {
 			console.error("Error signing out: ", error);
