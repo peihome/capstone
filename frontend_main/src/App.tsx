@@ -16,6 +16,8 @@ import Press from "./PressPage";
 import Contact from "./ContactPage";
 import VideoReviewPage from "./VideoReviewPage";
 import VideoUnavailablePage from "./VideoUnavailable";
+import WatchTogether from "./WatchTogether";
+import WatchRoom from "./WatchRoom";
 
 export default function App() {
 	return (
@@ -55,6 +57,11 @@ export default function App() {
 							path="/video/unavailable"
 							element={<VideoUnavailablePage />}
 						/>
+						{/* Route for the Watch Together page */}
+						<Route path="/room" element={<WatchTogether />} />
+
+						{/* Route for the Watch Room page */}
+						<Route path="/room/:roomId" element={<WatchRoom />} />
 					</Routes>
 				</Container>
 			</Router>

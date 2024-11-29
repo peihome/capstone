@@ -4,12 +4,12 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-    "start": "vite --host",
+		"start": "vite --host",
 		"dev": "vite",
 		"buildapp": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
-    "build": "docker rmi -f frontend_main || true && docker build -t frontend_main ."
+		"build": "docker rmi -f frontend_main || true && docker build -t frontend_main ."
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
@@ -32,8 +32,10 @@
 		"react-player": "^2.16.0",
 		"react-router-dom": "^6.26.2",
 		"recharts": "^2.13.3",
+		"socket.io-client": "^4.8.1",
 		"tailwind-merge": "^2.5.2",
 		"tailwindcss-animate": "^1.0.7",
+		"uuid": "^11.0.3",
 		"video.js": "^8.19.1",
 		"zod": "^3.23.8"
 	},
