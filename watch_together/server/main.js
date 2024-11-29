@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://dev.nexstream.live"],
     methods: ["GET", "POST"],
     allowedHeaders: ['Content-Type'],
     credentials: true,
@@ -51,7 +51,17 @@ io.on("connection", (socket) => {
   // Handle video sync commands (play, pause, seek)
   socket.on("video-command", ({ roomId, command, time }) => {
     console.log('Video Activity');
-    socket.to(roomId).emit("sync-video", { command, time });
+    socket.to(roomId).emit("sync-video", { command, time});
+  });
+
+  socket.on("update-video-url", ({ roomId, videoUrl }) => {
+    console.log('Video URL ' + videoUrl + "room Id : " + roomId);
+    socket.to(roomId).emit("set-video-url", { videoUrl });
+  });
+
+  socket.on("sync-time", ({ roomId, currentTime }) => {
+    console.log(`Received sync request for Room: ${roomId}, Time: ${currentTime}`);
+    socket.to(roomId).emit("set-time", { currentTime });
   });
 
   // Handle disconnecting users

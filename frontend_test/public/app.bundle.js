@@ -17,8 +17,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _KafkaProducer_jsx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./KafkaProducer.jsx */ "./jsx/KafkaProducer.jsx");
 /* harmony import */ var _WatchTogether_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./WatchTogether.jsx */ "./jsx/WatchTogether.jsx");
 /* harmony import */ var _WatchRoom_jsx__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./WatchRoom.jsx */ "./jsx/WatchRoom.jsx");
-/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/dist/index.js");
-/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/dist/index.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
+/* harmony import */ var _SocketProvider_jsx__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./SocketProvider.jsx */ "./jsx/SocketProvider.jsx");
+
 
 
 
@@ -28,15 +30,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function App() {
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_7__.HashRouter, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.Route, {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.HashRouter, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_9__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_9__.Route, {
     path: "/",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_WatchTogether_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], null)
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_8__.Route, {
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_9__.Route, {
     path: "/room/:roomId",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_WatchRoom_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], null)
   })));
 }
-react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById("contents")).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(App, null));
+react_dom_client__WEBPACK_IMPORTED_MODULE_1__.createRoot(document.getElementById("contents")).render(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SocketProvider_jsx__WEBPACK_IMPORTED_MODULE_7__.SocketProvider, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(App, null)));
 
 /***/ }),
 
@@ -501,6 +503,239 @@ var S3VideoPlayer = function S3VideoPlayer() {
 
 /***/ }),
 
+/***/ "./jsx/SocketProvider.jsx":
+/*!********************************!*\
+  !*** ./jsx/SocketProvider.jsx ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SocketProvider: () => (/* binding */ SocketProvider),
+/* harmony export */   useSocket: () => (/* binding */ useSocket)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var socket_io_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/build/esm/index.js");
+
+
+var SocketContext = /*#__PURE__*/(0,react__WEBPACK_IMPORTED_MODULE_0__.createContext)();
+var socket = (0,socket_io_client__WEBPACK_IMPORTED_MODULE_1__.io)("https://watch.nexstream.live", {
+  withCredentials: true
+});
+var SocketProvider = function SocketProvider(_ref) {
+  var children = _ref.children;
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(SocketContext.Provider, {
+    value: socket
+  }, children);
+};
+var useSocket = function useSocket() {
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.useContext)(SocketContext);
+};
+
+/***/ }),
+
+/***/ "./jsx/SyncS3VideoPlayer.jsx":
+/*!***********************************!*\
+  !*** ./jsx/SyncS3VideoPlayer.jsx ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var video_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! video.js */ "./node_modules/video.js/dist/video.es.js");
+/* harmony import */ var _SocketProvider_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./SocketProvider.jsx */ "./jsx/SocketProvider.jsx");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+
+
+
+var roomId = window.location.hash.split('/')[2];
+var SyncS3VideoPlayer = function SyncS3VideoPlayer() {
+  var socket = (0,_SocketProvider_jsx__WEBPACK_IMPORTED_MODULE_2__.useSocket)();
+  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
+    _useState2 = _slicedToArray(_useState, 2),
+    videoUrl = _useState2[0],
+    setVideoUrl = _useState2[1];
+  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(''),
+    _useState4 = _slicedToArray(_useState3, 2),
+    errorMessage = _useState4[0],
+    setErrorMessage = _useState4[1];
+  var videoRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  var playerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    var player;
+    if (videoUrl) {
+      // Initialize Video.js player
+      player = (0,video_js__WEBPACK_IMPORTED_MODULE_1__["default"])(videoRef.current, {
+        controls: true,
+        autoplay: false,
+        sources: [{
+          src: videoUrl,
+          type: 'application/x-mpegURL'
+        }],
+        fluid: true,
+        muted: true,
+        techOrder: ['html5']
+      });
+      playerRef.current = player;
+
+      // Handle Video.js errors
+      player.on('error', function () {
+        setErrorMessage('Error attempting to play the video.');
+      });
+
+      // Handle play/pause commands from server
+      socket.on('sync-video', function (_ref) {
+        var command = _ref.command;
+        console.log('sync-video command received : ' + command);
+        if (command === 'play') {
+          player.play();
+        } else if (command === 'pause') {
+          player.pause();
+        }
+      });
+      socket.on("set-time", function (_ref2) {
+        var currentTime = _ref2.currentTime;
+        if (playerRef.current) {
+          console.log("Setting time to: ".concat(currentTime));
+          playerRef.current.currentTime(currentTime);
+        }
+      });
+
+      // Emit current video time to sync periodically (every second)
+      var syncInterval = setInterval(function () {
+        if (player && !player.paused()) {
+          socket.emit('video-sync', {
+            roomId: roomId,
+            currentTime: player.currentTime()
+          });
+        }
+      }, 1000);
+      return function () {
+        clearInterval(syncInterval);
+        if (playerRef.current) {
+          playerRef.current.dispose();
+        }
+
+        // Remove socket listeners
+        socket.off("sync-video");
+        socket.off("set-time");
+        socket.off("set-video-url");
+      };
+    }
+    socket.on("set-video-url", function (_ref3) {
+      var videoUrl = _ref3.videoUrl;
+      console.log('Got It ' + videoUrl);
+      setVideoUrl(videoUrl);
+    });
+  }, [videoUrl, roomId]);
+
+  // Handle Submit to set video URL
+  var handleSubmit = function handleSubmit(e) {
+    e.preventDefault();
+    if (!videoUrl.trim()) {
+      setErrorMessage('Please enter a valid video URL');
+      return;
+    }
+    setErrorMessage('');
+    socket.emit('set-video-url', {
+      roomId: roomId,
+      videoUrl: videoUrl
+    });
+  };
+
+  // Play video and emit play command
+  var handlePlay = function handlePlay() {
+    if (playerRef.current) {
+      playerRef.current.play();
+      // Emit play command with roomId and command
+      console.log(roomId);
+      socket.emit('video-command', {
+        roomId: roomId,
+        command: 'play'
+      });
+    }
+  };
+
+  // Pause video and emit pause command
+  var handlePause = function handlePause() {
+    if (playerRef.current) {
+      playerRef.current.pause();
+      console.log(roomId);
+      socket.emit('video-command', {
+        roomId: roomId,
+        command: 'pause'
+      });
+    }
+  };
+
+  // Handle sync command
+  var handleSync = function handleSync() {
+    if (playerRef.current) {
+      var currentTime = playerRef.current.currentTime(); // Get current playback time
+      console.log("Syncing time: ".concat(currentTime, " in Room: ").concat(roomId));
+      socket.emit("sync-time", {
+        roomId: roomId,
+        currentTime: currentTime
+      }); // Emit sync event
+    }
+  };
+  var handleUrlChange = function handleUrlChange(e) {
+    setVideoUrl(e.target.value);
+    console.log(e.target.value + " : " + roomId);
+    socket.emit('update-video-url', {
+      roomId: roomId,
+      videoUrl: e.target.value
+    });
+  };
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "video-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
+    onSubmit: handleSubmit,
+    className: "video-form"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "text",
+    placeholder: "Enter S3 Video or M3U8 URL",
+    value: videoUrl,
+    onChange: function onChange(e) {
+      return handleUrlChange(e);
+    }
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    type: "submit"
+  }, "Play Video")), errorMessage && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
+    style: {
+      color: 'red'
+    }
+  }, errorMessage), videoUrl && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "video-player-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("video", {
+    ref: videoRef,
+    className: "video-js vjs-default-skin"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "controls"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: handlePlay
+  }, "Play"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: handlePause
+  }, "Pause"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: handleSync
+  }, "Sync"))));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SyncS3VideoPlayer);
+
+/***/ }),
+
 /***/ "./jsx/WatchRoom.jsx":
 /*!***************************!*\
   !*** ./jsx/WatchRoom.jsx ***!
@@ -515,8 +750,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
-/* harmony import */ var socket_io_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! socket.io-client */ "./node_modules/socket.io-client/build/esm/index.js");
-/* harmony import */ var _S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./S3VideoPlayer.jsx */ "./jsx/S3VideoPlayer.jsx");
+/* harmony import */ var _SyncS3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./SyncS3VideoPlayer.jsx */ "./jsx/SyncS3VideoPlayer.jsx");
+/* harmony import */ var _SocketProvider_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./SocketProvider.jsx */ "./jsx/SocketProvider.jsx");
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
@@ -531,10 +766,8 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 
-var socket = (0,socket_io_client__WEBPACK_IMPORTED_MODULE_1__.io)("http://localhost:7186", {
-  withCredentials: true
-});
 function WatchRoom() {
+  var socket = (0,_SocketProvider_jsx__WEBPACK_IMPORTED_MODULE_2__.useSocket)();
   var _useParams = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_3__.useParams)(),
     roomId = _useParams.roomId;
   var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null),
@@ -566,6 +799,7 @@ function WatchRoom() {
     socket.on("receive-message", function (_ref) {
       var username = _ref.username,
         message = _ref.message;
+      console.log('MEssage received');
       setMessages(function (prevMessages) {
         return [].concat(_toConsumableArray(prevMessages), [{
           username: username,
@@ -586,6 +820,9 @@ function WatchRoom() {
 
     // Cleanup when the component unmounts
     return function () {
+      socket.emit("leave-room", {
+        roomId: roomId
+      });
       socket.off("receive-message");
       socket.off("user-joined");
     };
@@ -627,7 +864,7 @@ function WatchRoom() {
     placeholder: "Type a message"
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     onClick: handleSendMessage
-  }, "Send"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, "Watch Video Together"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_S3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], null)));
+  }, "Send"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, "Watch Video Together"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, "https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/About_Eating_Meat..._-_Nas_Daily_(1080p%2C_h264).mp4/master.m3u8"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SyncS3VideoPlayer_jsx__WEBPACK_IMPORTED_MODULE_1__["default"], null)));
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WatchRoom);
 

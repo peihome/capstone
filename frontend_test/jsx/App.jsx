@@ -6,6 +6,7 @@ import KafkaProducer from './KafkaProducer.jsx';
 import WatchTogether from './WatchTogether.jsx';
 import WatchRoom from './WatchRoom.jsx';
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { SocketProvider } from "./SocketProvider.jsx";
 
 function App() {
     return (
@@ -21,4 +22,8 @@ function App() {
     );
   }
 
-ReactDOM.createRoot(document.getElementById("contents")).render(<App />);
+ReactDOM.createRoot(document.getElementById("contents")).render(
+  <SocketProvider>
+    <App />
+  </SocketProvider>
+);
