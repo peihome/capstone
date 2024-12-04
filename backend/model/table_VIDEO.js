@@ -44,7 +44,7 @@ const createVideo = async (req, res) => {
 
 const transcodingComplete = async (req, res) => {
   const { video_id } = req.params;
-  const { video_url, thumbnail_url } = req.body;
+  const { video_url, thumbnail_url, archived_url } = req.body;
 
   // Validate input
   if (!video_id || !video_url) {
@@ -64,6 +64,10 @@ const transcodingComplete = async (req, res) => {
       video.video_url = video_url;
       if(thumbnail_url){
         video.thumbnail_url = thumbnail_url;
+      }
+
+      if(archived_url){
+        video.archived_url = archived_url;
       }
 
       // Save the updated video object
@@ -113,6 +117,7 @@ const getVideoDetails = async (req, res) => {
         v.user_id,
         v.created_at,
         v.video_url,
+        v.archived_url,
         c.name AS channel_name,
         c.description AS channel_description
       FROM "VIDEO" v

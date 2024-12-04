@@ -104,6 +104,7 @@ async function initDB() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             video_url TEXT,
             thumbnail_url TEXT,
+            archived_url TEXT,
             channel_id UUID,
             FOREIGN KEY (user_id) REFERENCES "USER"(user_id) ON DELETE CASCADE,
             FOREIGN KEY (channel_id) REFERENCES "CHANNEL"(channel_id) ON DELETE CASCADE

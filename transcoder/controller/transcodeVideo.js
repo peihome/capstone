@@ -68,12 +68,15 @@ async function transcodeVideo(etag, title, description, user_id) {
 
         console.log('Master playlist created and uploaded successfully');
 
-        // Copy the original file to the new folder
+        // Copy the original file to the archived folder
+        const archivedKey = `archived/${fileKey.replace(/ /g, '_')}`;
         await s3.copyObject({
             Bucket: process.env.s3BucketName,
             CopySource: `${process.env.s3BucketName}/${fileKey}`,
-            Key: `archived/${fileKey.replace(/ /g, '_')}`
+            Key: archivedKey
         }).promise();
+
+        const archivedUrl = `https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/${archivedKey}`;
 
         // Delete the original file after copying
         await s3.deleteObject({
@@ -91,9 +94,11 @@ async function transcodeVideo(etag, title, description, user_id) {
         await axios.post(`${backendHOST}/api/videos/${video_id}/transcoding/complete`, {
             video_id,
             video_url: videoUrl,
-            thumbnail_url: thumbnailUrl
+            thumbnail_url: thumbnailUrl,
+            archived_url: archivedUrl
         });
 
+        console.log(`Archived MP4 video URL: ${archivedUrl}`);
     } catch (error) {
         console.error('Error during transcoding:', error);
 

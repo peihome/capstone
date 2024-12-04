@@ -84,6 +84,7 @@ const Video = sequelize.define('Video', {
   transcoding_status: { type: DataTypes.STRING },
   video_url: { type: DataTypes.TEXT },
   thumbnail_url: { type: DataTypes.TEXT },
+  archived_url: { type: DataTypes.TEXT },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'VIDEO', timestamps: false });
 

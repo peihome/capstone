@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "https://dev.nexstream.live", "http://localhost:5173"],
+    origin: ["http://localhost:3000", "https://dev.nexstream.live", "http://localhost:5173", "https://nexstream.live"],
     methods: ["GET", "POST"],
     allowedHeaders: ['Content-Type'],
     credentials: true,

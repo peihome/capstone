@@ -208,8 +208,8 @@ const getDashboard = async (req, res) => {
                 channel_id: video.channel_id,
                 channel_name: video.Channel.name, // Channel name from associated Channel model
                 views: formatViews(counters.views),
-                likes: counters.likes,
-                dislikes: counters.dislikes,
+                likes: counters.likes+"",
+                dislikes: counters.dislikes+"",
                 published_at: formatPublishedTime(video.published_at),
                 thumbnail: video.thumbnail_url
             };
