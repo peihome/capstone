@@ -1,42 +1,46 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import SyncS3VideoPlayer from "./SyncS3VideoPlayer.js";
-
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	Card,
+	CardHeader,
+	CardTitle,
+	CardContent,
+	CardFooter,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "./SocketProvider";
+import SyncS3VideoPlayer from "./SyncS3VideoPlayer";
 
-function WatchRoom() {
+interface Message {
+	username: string;
+	message: string;
+}
+
+export default function WatchRoom() {
 	const socket = useSocket();
+	const { roomId } = useParams<{ roomId: string }>();
 
-	const { roomId } = useParams();
 	const [username, setUsername] = useState<string | null>(null);
 	const [message, setMessage] = useState("");
-	interface Message {
-		username: string;
-		message: string;
-	}
-
 	const [messages, setMessages] = useState<Message[]>([]);
 
 	useEffect(() => {
-		// Get username if not set
 		if (!username) {
 			const user = prompt("Enter your username:") || "Anonymous";
 			setUsername(user);
 		}
 
-		// Join the room
 		socket?.emit("join-room", { roomId, username });
 
-		// Listen for messages
 		socket?.on("receive-message", ({ username, message }) => {
-			console.log("MEssage received");
 			setMessages((prevMessages) => [
 				...prevMessages,
 				{ username: username || "Anonymous", message },
 			]);
 		});
 
-		// Listen for user joining
 		socket?.on("user-joined", (username) => {
 			setMessages((prevMessages) => [
 				...prevMessages,
@@ -47,16 +51,13 @@ function WatchRoom() {
 			]);
 		});
 
-		// Cleanup when the component unmounts
 		return () => {
 			socket?.emit("leave-room", { roomId });
-
 			socket?.off("receive-message");
 			socket?.off("user-joined");
 		};
-	}, [roomId, username]);
+	}, [roomId, username, socket]);
 
-	// Handle sending a message
 	const handleSendMessage = () => {
 		if (message.trim() !== "") {
 			socket?.emit("send-message", { roomId, message, username });
@@ -64,51 +65,51 @@ function WatchRoom() {
 				...prevMessages,
 				{ username: username || "Anonymous", message },
 			]);
-			setMessage(""); // Clear input after sending
+			setMessage("");
 		}
 	};
 
 	return (
-		<div>
-			<h1>Room {roomId}</h1>
-
-			<div>
-				<h2>Chat:</h2>
-				<div
-					style={{
-						maxHeight: "300px",
-						overflowY: "scroll",
-						border: "1px solid #ccc",
-					}}
-				>
-					{messages.map((msg, index) => (
-						<div key={index}>
-							<strong>{msg.username}:</strong> {msg.message}
+		<div className="container mx-auto px-4 py-8">
+			<h1 className="text-3xl font-bold mb-6">Room {roomId}</h1>
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+				<Card>
+					<CardHeader>
+						<CardTitle>Chat</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<ScrollArea className="h-[300px] w-full rounded-md border p-4">
+							{messages.map((msg, index) => (
+								<div key={index} className="mb-2">
+									<span className="font-semibold">
+										{msg.username}:
+									</span>{" "}
+									{msg.message}
+								</div>
+							))}
+						</ScrollArea>
+					</CardContent>
+					<CardFooter>
+						<div className="flex w-full items-center space-x-2">
+							<Input
+								type="text"
+								value={message}
+								onChange={(e) => setMessage(e.target.value)}
+								placeholder="Type a message"
+							/>
+							<Button onClick={handleSendMessage}>Send</Button>
 						</div>
-					))}
-				</div>
-
-				<div>
-					<input
-						type="text"
-						value={message}
-						onChange={(e) => setMessage(e.target.value)}
-						placeholder="Type a message"
-					/>
-					<button onClick={handleSendMessage}>Send</button>
-				</div>
-			</div>
-
-			<div>
-				<h2>Watch Video Together</h2>
-				<h3>
-					https://ssuurryyaa-video.s3.ca-central-1.amazonaws.com/About_Eating_Meat..._-_Nas_Daily_(1080p%2C_h264).mp4/master.m3u8
-				</h3>
-
-				<SyncS3VideoPlayer />
+					</CardFooter>
+				</Card>
+				<Card>
+					<CardHeader>
+						<CardTitle>Watch Video Together</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<SyncS3VideoPlayer />
+					</CardContent>
+				</Card>
 			</div>
 		</div>
 	);
 }
-
-export default WatchRoom;
