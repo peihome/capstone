@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -95,7 +97,6 @@ export default function ContentModeration() {
 	};
 
 	const handleReview = (videoId: string) => {
-		//navigate(`/admin/review/${videoId}`);
 		window.location.href = `/admin/review/${videoId}`;
 	};
 
@@ -147,6 +148,7 @@ export default function ContentModeration() {
 											variant="outline"
 											size="sm"
 											className="mr-2"
+											disabled={video.status_id === -1}
 										>
 											Review
 										</Button>
