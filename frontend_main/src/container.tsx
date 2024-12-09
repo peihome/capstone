@@ -18,6 +18,7 @@ import {
 	X,
 	LogOut,
 	User,
+	Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,12 +43,28 @@ export function Container({ children }: ContainerProps) {
 	const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 	const [isMounted, setIsMounted] = useState(false);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [isAdmin, setIsAdmin] = useState(false);
 	const navigate = useNavigate();
 	const { searchQuery, setSearchQuery } = useSearch();
 
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchQuery(e.target.value);
 	};
+
+	useEffect(() => {
+		setIsMounted(true);
+		const unsubscribe = auth.onAuthStateChanged((user) => {
+			setIsAuthenticated(!!user);
+		});
+
+		// Check for admin user ID in local storage
+		const userId = localStorage.getItem("user_id");
+		if (userId === "a4087a77-991f-40d2-8240-1dcee88f52b2") {
+			setIsAdmin(true);
+		}
+
+		return () => unsubscribe();
+	}, []);
 
 	useEffect(() => {
 		setIsMounted(true);
@@ -243,6 +260,16 @@ export function Container({ children }: ContainerProps) {
 								<MessageSquare className="mr-2 h-4 w-4" /> Send
 								Feedback
 							</Button>
+							{isAdmin && (
+								<Button
+									variant="ghost"
+									className="w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700"
+									onClick={() => navigate("/admin")}
+								>
+									<Shield className="mr-2 h-4 w-4" /> Admin
+									Page
+								</Button>
+							)}
 						</nav>
 						<div className="mt-auto space-y-4">
 							<div className="grid grid-cols-2 gap-2 text-xs">
