@@ -70,34 +70,46 @@ export default function VideoReviewPage() {
 	}, [videoId]);
 
 	useEffect(() => {
-		if (videoDetails && videoRef.current) {
-			const player = videojs(videoRef.current, {
-				controls: true,
-				autoplay: false,
-				preload: "auto",
-				fluid: true,
-				sources: [
-					{
-						src: videoDetails.video_url,
-						type: "application/x-mpegURL",
-					},
-				],
-				techOrder: ["html5"],
-			});
-
-			playerRef.current = player;
-
-			player.on("error", (event: any) => {
-				console.error("Video.js error:", event);
-				setError("Error attempting to play the video.");
-			});
-
-			return () => {
-				if (playerRef.current) {
-					playerRef.current.dispose();
-				}
-			};
-		}
+		// Polling mechanism to wait until videoRef is ready
+		const waitForRef = setInterval(() => {
+			if (videoRef.current && videoDetails) {
+				// Initialize Video.js player
+				const player = videojs(videoRef.current, {
+					controls: true,
+					autoplay: false,
+					preload: "auto",
+					responsive: true,
+					fluid: false,
+					aspectRatio: "16:9",
+					sources: [
+						{
+							src: videoDetails.video_url,
+							type: "application/x-mpegURL",
+						},
+					],
+					techOrder: ["html5"],
+				});
+	
+				playerRef.current = player;
+	
+				player.on("error", (event: any) => {
+					console.error("Video.js error:", event);
+					setError("Error attempting to play the video.");
+				});
+	
+				// Stop polling once reference is established
+				clearInterval(waitForRef);
+			}
+		}, 100); // Check every 100ms
+	
+		// Cleanup on unmount or dependency change
+		return () => {
+			clearInterval(waitForRef);
+			if (playerRef.current) {
+				playerRef.current.dispose();
+				playerRef.current = null; // Reset reference
+			}
+		};
 	}, [videoDetails]);
 
 	const handleStatusChange = async (newStatusId: number) => {
