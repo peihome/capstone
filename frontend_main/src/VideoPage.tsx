@@ -114,37 +114,47 @@ export default function VideoPage() {
 	}, [videoId, navigate]);
 
 	useEffect(() => {
-		if (videoDetails && videoRef.current) {
-			const player = videojs(videoRef.current, {
-				controls: true,
-				autoplay: false,
-				preload: "auto",
-				responsive: true,
-				fluid: false,
-				aspectRatio: "16:9",
-				sources: [
-					{
-						src: videoDetails.video_url,
-						type: "application/x-mpegURL",
-					},
-				],
-				techOrder: ["html5"],
-			});
-
-			playerRef.current = player;
-
-			player.on("error", (event: any) => {
-				console.error("Video.js error:", event);
-				setError("Error attempting to play the video.");
-			});
-
-			return () => {
-				if (playerRef.current) {
-					playerRef.current.dispose();
-				}
-			};
-		}
-	}, [videoDetails]);
+		// Polling mechanism to wait until videoRef is ready
+		const waitForRef = setInterval(() => {
+			if (videoRef.current && videoDetails) {
+				// Initialize Video.js player
+				const player = videojs(videoRef.current, {
+					controls: true,
+					autoplay: false,
+					preload: "auto",
+					responsive: true,
+					fluid: false,
+					aspectRatio: "16:9",
+					sources: [
+						{
+							src: videoDetails.video_url,
+							type: "application/x-mpegURL",
+						},
+					],
+					techOrder: ["html5"],
+				});
+	
+				playerRef.current = player;
+	
+				player.on("error", (event: any) => {
+					console.error("Video.js error:", event);
+					setError("Error attempting to play the video.");
+				});
+	
+				// Stop polling once reference is established
+				clearInterval(waitForRef);
+			}
+		}, 100); // Check every 100ms
+	
+		// Cleanup on unmount or dependency change
+		return () => {
+			clearInterval(waitForRef);
+			if (playerRef.current) {
+				playerRef.current.dispose();
+				playerRef.current = null; // Reset reference
+			}
+		};
+	}, [videoDetails]);	
 
 	const fetchComments = async (page = 0) => {
 		setIsLoadingComments(true);
@@ -217,7 +227,7 @@ export default function VideoPage() {
 	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>{error}</div>;
 	if (!videoDetails) return <div>Video not found</div>;
-
+	
 	return (
 		<div className="container mx-auto px-4 py-8">
 			<div className="flex flex-col lg:flex-row gap-8">
@@ -374,10 +384,11 @@ export default function VideoPage() {
 }
 
 function RecommendedVideoCard({ video }: { video: Video }) {
-	const navigate = useNavigate();
+	//const navigate = useNavigate();
 
 	const handleClick = () => {
-		navigate(`/video/${video.video_id}`);
+		//navigate(`/video/${video.video_id}`);
+		window.location.href = `/video/${video.video_id}`;
 	};
 
 	return (

@@ -86,7 +86,9 @@ export default function HomePage() {
 					<VideoCard
 						key={video.video_id}
 						video={video}
-						onClick={() => navigate(`/video/${video.video_id}`)}
+						onClick={() => navigate(`/video/${video.video_id}`)
+						//onClick={() => window.location.href = `/video/${video.video_id}`
+						}
 					/>
 				))}
 			</div>

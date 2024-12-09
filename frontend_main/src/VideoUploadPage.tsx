@@ -56,8 +56,8 @@ const uploadUrl = `http://localhost:${backend_PORT}/upload`;
 const completeUrl = `http://localhost:${backend_PORT}/complete`;
 const kafkaSendUrl = `http://localhost:8001/send`;
 
-console.log(backend_PORT);
-console.log(import.meta.env.transcoder_HOST);
+//console.log(backend_PORT);
+//console.log(import.meta.env.transcoder_HOST);
 
 export default function VideoUploadPage() {
 	const [videoPreview, setVideoPreview] = useState<string | null>(null);

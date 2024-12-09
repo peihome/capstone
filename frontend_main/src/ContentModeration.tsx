@@ -95,7 +95,8 @@ export default function ContentModeration() {
 	};
 
 	const handleReview = (videoId: string) => {
-		navigate(`/admin/review/${videoId}`);
+		//navigate(`/admin/review/${videoId}`);
+		window.location.href = `/admin/review/${videoId}`;
 	};
 
 	return (
