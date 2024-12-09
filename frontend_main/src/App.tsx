@@ -19,6 +19,7 @@ import VideoUnavailablePage from "./VideoUnavailable";
 import WatchTogether from "./WatchTogether";
 import WatchRoom from "./WatchRoom";
 import { SearchProvider } from "./SearchContext";
+import ProtectedRoute from "./ProtectedRoute";
 
 export default function App() {
 	return (
@@ -50,7 +51,14 @@ export default function App() {
 								path="/:username/upload"
 								element={<VideoUploadPage />}
 							/>
-							<Route path="/admin" element={<AdminDashboard />} />
+							<Route
+								path="/admin"
+								element={
+									<ProtectedRoute>
+										<AdminDashboard />
+									</ProtectedRoute>
+								}
+							/>
 							<Route path="/about" element={<About />} />
 							<Route path="/press" element={<Press />} />
 							<Route path="/contact" element={<Contact />} />

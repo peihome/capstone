@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ContentModeration from "./ContentModeration.tsx";
-import UserManagement from "./UserManagement.tsx";
-import AdminStatistics from "./AdminStatistics.tsx";
-import AppealsDisputes from "./AppealsDisputes.tsx";
+import ContentModeration from "./ContentModeration";
+import UserManagement from "./UserManagement";
+import AdminStatistics from "./AdminStatistics";
+import AppealsDisputes from "./AppealsDisputes";
 
 export default function AdminDashboard() {
 	return (
