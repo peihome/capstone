@@ -31,6 +31,7 @@ import {
 import { useDarkMode } from "./DarkModeContext";
 import { auth } from "@/firebase/firebase";
 import { signOut } from "firebase/auth";
+import { SearchProvider, useSearch } from "./SearchContext";
 
 interface ContainerProps {
 	children: ReactNode;
@@ -42,6 +43,11 @@ export function Container({ children }: ContainerProps) {
 	const [isMounted, setIsMounted] = useState(false);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const navigate = useNavigate();
+	const { searchQuery, setSearchQuery } = useSearch();
+
+	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchQuery(e.target.value);
+	};
 
 	useEffect(() => {
 		setIsMounted(true);
@@ -111,6 +117,8 @@ export function Container({ children }: ContainerProps) {
 						type="search"
 						placeholder="Search..."
 						className="w-full bg-gray-100 dark:bg-gray-700"
+						value={searchQuery}
+						onChange={handleSearch}
 					/>
 					<Button
 						size="icon"
@@ -214,25 +222,23 @@ export function Container({ children }: ContainerProps) {
 							<Button
 								variant="ghost"
 								className="w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700"
+								onClick={() => navigate("/room")}
 							>
-								<PlaySquare className="mr-2 h-4 w-4" />{" "}
-								Subscriptions
+								<PlaySquare className="mr-2 h-4 w-4" /> Watch
+								Together
 							</Button>
 							<Button
 								variant="ghost"
 								className="w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700"
+								onClick={handleUserProfile}
 							>
-								<Settings className="mr-2 h-4 w-4" /> Settings
+								<Settings className="mr-2 h-4 w-4" /> User
+								Profile
 							</Button>
 							<Button
 								variant="ghost"
 								className="w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700"
-							>
-								<HelpCircle className="mr-2 h-4 w-4" /> Help
-							</Button>
-							<Button
-								variant="ghost"
-								className="w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700"
+								onClick={() => navigate("/contact")}
 							>
 								<MessageSquare className="mr-2 h-4 w-4" /> Send
 								Feedback
@@ -263,62 +269,6 @@ export function Container({ children }: ContainerProps) {
 									className="hover:underline text-gray-600 dark:text-gray-400"
 								>
 									Contact us
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Creators
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Advertise
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Developers
-								</a>
-							</div>
-							<div className="grid grid-cols-2 gap-2 text-xs">
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Terms
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Privacy
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Policy & Safety
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									How Nexstream works
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Test new features
-								</a>
-								<a
-									href="#"
-									className="hover:underline text-gray-600 dark:text-gray-400"
-								>
-									Accessibility
 								</a>
 							</div>
 							<div className="flex justify-center space-x-4">
@@ -352,7 +302,15 @@ export function Container({ children }: ContainerProps) {
 				</aside>
 
 				<main className="flex-grow overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4">
-					{children}
+					{React.Children.map(children, (child) => {
+						if (React.isValidElement(child)) {
+							return React.cloneElement(
+								child as React.ReactElement<any>,
+								{ searchQuery }
+							);
+						}
+						return child;
+					})}
 				</main>
 			</div>
 		</div>

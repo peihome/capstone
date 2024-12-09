@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useSearch } from "./SearchContext";
 
 interface Video {
 	video_id: string;
@@ -21,10 +23,12 @@ interface ApiResponse {
 
 export default function HomePage() {
 	const [videos, setVideos] = useState<Video[]>([]);
+	const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
 	const [nextPage, setNextPage] = useState<number>(0);
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const { searchQuery } = useSearch();
 	const navigate = useNavigate();
 
 	const fetchVideos = async (page: number) => {
@@ -35,11 +39,14 @@ export default function HomePage() {
 				`https://api.nexstream.live/api/dashboard?page=${page}`
 			);
 			if (page === 0) {
-				// If it's the first page, replace the entire videos array
 				setVideos(response.data.videos);
+				setFilteredVideos(response.data.videos);
 			} else {
-				// For subsequent pages, append new videos to the existing array
 				setVideos((prevVideos) => [
+					...prevVideos,
+					...response.data.videos,
+				]);
+				setFilteredVideos((prevVideos) => [
 					...prevVideos,
 					...response.data.videos,
 				]);
@@ -57,6 +64,13 @@ export default function HomePage() {
 		fetchVideos(0);
 	}, []);
 
+	useEffect(() => {
+		const filtered = videos.filter((video) =>
+			video.title.toLowerCase().includes(searchQuery.toLowerCase())
+		);
+		setFilteredVideos(filtered);
+	}, [searchQuery, videos]);
+
 	const loadMore = () => {
 		if (hasMore && !isLoading) {
 			fetchVideos(nextPage);
@@ -68,7 +82,7 @@ export default function HomePage() {
 			<h1 className="text-3xl font-bold mb-6">Recommended Videos</h1>
 			{error && <p className="text-red-500 mb-4">{error}</p>}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-				{videos.map((video) => (
+				{filteredVideos.map((video) => (
 					<VideoCard
 						key={video.video_id}
 						video={video}
