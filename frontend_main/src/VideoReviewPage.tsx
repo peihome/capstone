@@ -21,9 +21,24 @@ interface VideoDetails {
 	channel_description: string;
 }
 
-interface DisputeDetails {
+interface ReportedVideo {
+	video_id: string;
 	dispute_id: string;
+	title: string;
+	report_count: number;
 	status_id: number;
+}
+
+interface ApiResponse {
+	message: string;
+	data: ReportedVideo[];
+	pagination: {
+		totalRecords: number;
+		totalPages: number;
+		currentPage: number;
+		pageSize: number;
+		hasNext: boolean;
+	};
 }
 
 const statusMap: { [key: number]: string } = {
@@ -36,7 +51,7 @@ export default function VideoReviewPage() {
 	const navigate = useNavigate();
 	const { videoId } = useParams<{ videoId: string }>();
 	const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null);
-	const [disputeDetails, setDisputeDetails] = useState<DisputeDetails | null>(
+	const [disputeDetails, setDisputeDetails] = useState<ReportedVideo | null>(
 		null
 	);
 	const [isLoading, setIsLoading] = useState(true);
@@ -46,17 +61,28 @@ export default function VideoReviewPage() {
 
 	useEffect(() => {
 		const fetchVideoAndDisputeDetails = async () => {
+			setIsLoading(true);
+			setError(null);
 			try {
 				const [videoResponse, disputeResponse] = await Promise.all([
 					axios.get<VideoDetails>(
 						`https://api.nexstream.live/video/${videoId}`
 					),
-					axios.get<DisputeDetails>(
+					axios.get<ApiResponse>(
 						`https://api.nexstream.live/api/admin/disputes?video_id=${videoId}`
 					),
 				]);
 				setVideoDetails(videoResponse.data);
-				setDisputeDetails(disputeResponse.data);
+				const reportedVideo = disputeResponse.data.data.find(
+					(video) => video.video_id === videoId
+				);
+				if (reportedVideo) {
+					setDisputeDetails(reportedVideo);
+				} else {
+					throw new Error(
+						"Dispute details not found for this video."
+					);
+				}
 			} catch (err) {
 				setError(
 					"Failed to fetch video and dispute details. Please try again later."
@@ -70,46 +96,34 @@ export default function VideoReviewPage() {
 	}, [videoId]);
 
 	useEffect(() => {
-		// Polling mechanism to wait until videoRef is ready
-		const waitForRef = setInterval(() => {
-			if (videoRef.current && videoDetails) {
-				// Initialize Video.js player
-				const player = videojs(videoRef.current, {
-					controls: true,
-					autoplay: false,
-					preload: "auto",
-					responsive: true,
-					fluid: false,
-					aspectRatio: "16:9",
-					sources: [
-						{
-							src: videoDetails.video_url,
-							type: "application/x-mpegURL",
-						},
-					],
-					techOrder: ["html5"],
-				});
-	
-				playerRef.current = player;
-	
-				player.on("error", (event: any) => {
-					console.error("Video.js error:", event);
-					setError("Error attempting to play the video.");
-				});
-	
-				// Stop polling once reference is established
-				clearInterval(waitForRef);
-			}
-		}, 100); // Check every 100ms
-	
-		// Cleanup on unmount or dependency change
-		return () => {
-			clearInterval(waitForRef);
-			if (playerRef.current) {
-				playerRef.current.dispose();
-				playerRef.current = null; // Reset reference
-			}
-		};
+		if (videoDetails && videoRef.current) {
+			const player = videojs(videoRef.current, {
+				controls: true,
+				autoplay: false,
+				preload: "auto",
+				fluid: true,
+				sources: [
+					{
+						src: videoDetails.video_url,
+						type: "application/x-mpegURL",
+					},
+				],
+				techOrder: ["html5"],
+			});
+
+			playerRef.current = player;
+
+			player.on("error", (event: any) => {
+				console.error("Video.js error:", event);
+				setError("Error attempting to play the video.");
+			});
+
+			return () => {
+				if (playerRef.current) {
+					playerRef.current.dispose();
+				}
+			};
+		}
 	}, [videoDetails]);
 
 	const handleStatusChange = async (newStatusId: number) => {
